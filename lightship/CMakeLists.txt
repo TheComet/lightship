@@ -1,0 +1,6 @@
+include (UrhoCommon)
+set (TARGET_NAME lightship)
+#set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+define_source_files (RECURSE)
+setup_library ()
+include_directories ("include")

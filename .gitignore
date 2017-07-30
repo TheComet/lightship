@@ -1,0 +1,19 @@
+# build directories
+/build*
+
+# Urho3D specific
+bin/*
+
+# temporary files
+*.kate-swp
+*.swp
+*~
+*.log
+
+# project files
+*.kdev4
+.idea/
+
+# Mac OS X
+.DS_Store
+
