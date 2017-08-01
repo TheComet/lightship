@@ -79,9 +79,6 @@ Node* Map::CreateTile(int tileType)
     TileState::Type type = static_cast<TileState::Type>(tileType);
     switch (type)
     {
-        case TileState::EMPTY:
-            break;
-
         case TileState::FLOOR:
         {
             node = mapNode_->CreateChild("Floor");
@@ -105,6 +102,10 @@ Node* Map::CreateTile(int tileType)
             model->SetModel(cache->GetResource<Model>("Models/Wall.mdl"));
             model->SetMaterial(cache->GetResource<Material>("Materials/Wall.xml"));
         } break;
+
+        case TileState::EMPTY:
+        case TileState::TYPE_COUNT:
+            break;
     }
 
     return node;
