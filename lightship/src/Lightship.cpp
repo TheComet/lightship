@@ -2,6 +2,7 @@
 #include "lightship/DebugTextScroll.h"
 #include "lightship/Lightship.h"
 #include "lightship/Map.h"
+#include "lightship/MapState.h"
 #include "lightship/TrackingCamera.h"
 
 #include <Urho3D/AngelScript/Script.h>
@@ -70,17 +71,6 @@ void Lightship::Start()
 
     GetSubsystem<Config>()->Load("Config/Config.xml");
 
-    XMLFile mapXML(context_);
-    XMLElement root = mapXML.CreateRoot("root");
-
-    File mapFile(context_);
-    mapFile.Open("Data/Maps/Test.xml", FILE_WRITE);
-
-    Map map(context_);
-    map.LoadOMG("Data/Maps/old/(10) Adam.omg");
-    map.SaveXML(root);
-    mapXML.Save(mapFile);
-
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(Lightship, HandleKeyDown));
     SubscribeToEvent(E_POSTRENDERUPDATE, URHO3D_HANDLER(Lightship, HandlePostRenderUpdate));
     SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(Lightship, HandleFileChanged));
@@ -118,16 +108,18 @@ void Lightship::LoadScene()
 #endif
 
     ResourceCache* cache = GetSubsystem<ResourceCache>();
-    XMLFile* file = cache->GetResource<XMLFile>("Maps/Test.xml");
+    XMLFile* file = cache->GetResource<XMLFile>("Maps/(10) Adam.xml");
+    MapState* mapState = new MapState(context_);
+    mapState->LoadXML(file->GetRoot());
     Map* map = scene_->CreateComponent<Map>();
-    map->LoadXML(file->GetRoot());
-    map->Generate();
+    map->SetState(mapState);
+    map->CreateFromState();
 
     Node* lightNode = scene_->CreateChild("Light");
     Light* light = lightNode->CreateComponent<Light>();
-    light->SetRange(120);
-    light->SetBrightness(2);
-    lightNode->SetPosition(Vector3(15, 1, 15));
+    light->SetLightType(LIGHT_DIRECTIONAL);
+    light->SetBrightness(3);
+    lightNode->SetRotation(Quaternion(30, 30, 0));
 }
 
 // ----------------------------------------------------------------------------
