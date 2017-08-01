@@ -1,6 +1,8 @@
-#include "lightship/Lightship.h"
-#include "lightship/DebugTextScroll.h"
 #include "lightship/Config.h"
+#include "lightship/DebugTextScroll.h"
+#include "lightship/Lightship.h"
+#include "lightship/Map.h"
+#include "lightship/TrackingCamera.h"
 
 #include <Urho3D/AngelScript/Script.h>
 #include <Urho3D/Core/CoreEvents.h>
@@ -61,9 +63,23 @@ void Lightship::Start()
     cache->SetAutoReloadResources(true);
 
     RegisterSubsystems();
+    RegisterComponents();
+    LoadScene();
+    CreateCamera();
     CreateDebugHud();
 
     GetSubsystem<Config>()->Load("Config/Config.xml");
+
+    XMLFile mapXML(context_);
+    XMLElement root = mapXML.CreateRoot("root");
+
+    File mapFile(context_);
+    mapFile.Open("Data/Maps/Test.xml", FILE_WRITE);
+
+    Map map(context_);
+    map.LoadOMG("Data/Maps/old/(10) Adam.omg");
+    map.SaveXML(root);
+    mapXML.Save(mapFile);
 
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(Lightship, HandleKeyDown));
     SubscribeToEvent(E_POSTRENDERUPDATE, URHO3D_HANDLER(Lightship, HandlePostRenderUpdate));
@@ -87,8 +103,31 @@ void Lightship::RegisterSubsystems()
 }
 
 // ----------------------------------------------------------------------------
-void Lightship::LoadScene(const String& fileName)
+void Lightship::RegisterComponents()
 {
+    Map::RegisterObject(context_);
+}
+
+// ----------------------------------------------------------------------------
+void Lightship::LoadScene()
+{
+    scene_ = new Scene(context_);
+    scene_->CreateComponent<Octree>();
+#ifdef DEBUG
+    scene_->CreateComponent<DebugRenderer>();
+#endif
+
+    ResourceCache* cache = GetSubsystem<ResourceCache>();
+    XMLFile* file = cache->GetResource<XMLFile>("Maps/Test.xml");
+    Map* map = scene_->CreateComponent<Map>();
+    map->LoadXML(file->GetRoot());
+    map->Generate();
+
+    Node* lightNode = scene_->CreateChild("Light");
+    Light* light = lightNode->CreateComponent<Light>();
+    light->SetRange(120);
+    light->SetBrightness(2);
+    lightNode->SetPosition(Vector3(15, 1, 15));
 }
 
 // ----------------------------------------------------------------------------
@@ -103,23 +142,27 @@ void Lightship::CreateCamera()
      * a "move" node. The rotation controller is separate from the movement
      * controller.
      */
-    playerNode_   = scene_->CreateChild("Player", LOCAL);
-    cameraOffsetNode_ = playerNode_->CreateChild("Camera Offset", LOCAL);
-    cameraRotateNode_ = cameraOffsetNode_->CreateChild("Camera Rotate", LOCAL);
-    Camera* camera = cameraRotateNode_->CreateComponent<Camera>(LOCAL);
+    Node* rotateNode = scene_->CreateChild("Camera", LOCAL);
+    Node* cameraNode = rotateNode->CreateChild("Camera Rotate", LOCAL);
+    Camera* camera = cameraNode->CreateComponent<Camera>();
     camera->SetFarClip(300.0f);
 
     // Give the camera a viewport
     Viewport* viewport = new Viewport(context_, scene_, camera);
     viewport->SetDrawDebug(true);
     renderer->SetViewport(0, viewport);
+
+    trackingCamera_ = new TrackingCamera(context_);
+    trackingCamera_->SetNodes(rotateNode, cameraNode);
+
+    rotateNode->SetPosition(Vector3(13, -5, 15));
+    rotateNode->SetRotation(Quaternion(30, 0, 0));
+    cameraNode->SetPosition(Vector3(0, 0, -30));
 }
 
 // ----------------------------------------------------------------------------
 void Lightship::CreatePlayer()
 {
-    // Needs to always exist
-    Node* modelNode = playerNode_->CreateChild("Player Model", LOCAL);
 }
 
 // ----------------------------------------------------------------------------

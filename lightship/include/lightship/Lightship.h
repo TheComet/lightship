@@ -10,6 +10,9 @@ namespace Urho3D {
     class XMLFile;
 }
 
+class Map;
+class TrackingCamera;
+
 class Lightship : public Urho3D::Application
 {
 public:
@@ -27,7 +30,8 @@ public:
 
 private:
     void RegisterSubsystems();
-    void LoadScene(const Urho3D::String& fileName);
+    void RegisterComponents();
+    void LoadScene();
     void CreateCamera();
     void CreatePlayer();
     void CreateDebugHud();
@@ -38,10 +42,9 @@ private:
 
     DebugDrawMode debugDrawMode_;
 
+    Urho3D::SharedPtr<TrackingCamera> trackingCamera_;
+    Urho3D::SharedPtr<Map> map_;
     Urho3D::SharedPtr<Urho3D::Scene> scene_;
     Urho3D::SharedPtr<Urho3D::XMLFile> xmlScene_;
-    Urho3D::SharedPtr<Urho3D::Node> playerNode_;
-    Urho3D::SharedPtr<Urho3D::Node> cameraOffsetNode_;
-    Urho3D::SharedPtr<Urho3D::Node> cameraRotateNode_;
     Urho3D::SharedPtr<Urho3D::DebugHud> debugHud_;
 };
