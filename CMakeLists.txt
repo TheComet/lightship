@@ -39,6 +39,10 @@ include_directories(${URHO3D_INCLUDE_DIRS})
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 
+# UrhoCommon makes this hidden, but we need it to be default for the lightship
+# target
+set (CMAKE_CXX_VISIBILITY_PRESET default)
+
 add_subdirectory ("lightship")
 add_subdirectory ("server")
 add_subdirectory ("client")

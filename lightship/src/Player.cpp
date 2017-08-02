@@ -1,8 +1,8 @@
 #include "lightship/Player.h"
+#include <Urho3D/Graphics/Material.h>
 #include <Urho3D/Graphics/Model.h>
 #include <Urho3D/Graphics/StaticModel.h>
 #include <Urho3D/Resource/ResourceCache.h>
-#include <Urho3D/Resource/XMLFile.h>
 
 using namespace Urho3D;
 
@@ -21,5 +21,5 @@ void Player::OnNodeSet(Node* node)
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     StaticModel* model = node->CreateComponent<StaticModel>();
     model->SetModel(cache->GetResource<Model>("Models/Player.mdl"));
-    model->SetMaterial(cache->GetResource<XMLFile>("Materials/Player.xml"));
+    model->SetMaterial(cache->GetResource<Material>("Materials/Player.xml"));
 }
