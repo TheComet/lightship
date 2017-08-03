@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lightship/config.h"
 #include <Urho3D/Core/Object.h>
 
 #if defined(DEBUG)

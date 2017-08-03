@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lightship/config.h"
 #include <Urho3D/Scene/Serializable.h>
 #include <stdint.h>
 
@@ -43,7 +44,7 @@ public:
     float radius_;
 };
 
-class MapState : public Urho3D::Serializable
+class LIGHTSHIP_PUBLIC_API MapState : public Urho3D::Serializable
 {
     URHO3D_OBJECT(MapState, Urho3D::Serializable);
 

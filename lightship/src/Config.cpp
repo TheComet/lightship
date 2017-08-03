@@ -1,5 +1,5 @@
-#include "lightship/Config.h"
-#include "lightship/ConfigEvents.h"
+#include "lightship/GameConfig.h"
+#include "lightship/GameConfigEvents.h"
 
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/Resource/ResourceCache.h>
@@ -10,28 +10,28 @@ using namespace Urho3D;
 
 
 // ----------------------------------------------------------------------------
-Config::Config(Context* context) :
+GameConfig::GameConfig(Context* context) :
     Object(context)
 {
-    SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(Config, HandleFileChanged));
+    SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(GameConfig, HandleFileChanged));
 }
 
 // ----------------------------------------------------------------------------
-void Config::Load(String fileName)
+void GameConfig::Load(String fileName)
 {
     xml_ = GetSubsystem<ResourceCache>()->GetResource<XMLFile>(fileName);
     Reload();
 }
 
 // ----------------------------------------------------------------------------
-void Config::LoadXML(XMLFile* xml)
+void GameConfig::LoadXML(XMLFile* xml)
 {
     xml_ = xml;
     Reload();
 }
 
 // ----------------------------------------------------------------------------
-void Config::Reload()
+void GameConfig::Reload()
 {
     if(!xml_)
     {
@@ -41,11 +41,11 @@ void Config::Reload()
 
     XMLElement root = xml_->GetRoot();
 
-    SendEvent(E_CONFIGRELOADED, GetEventDataMap());
+    SendEvent(E_GAMECONFIGRELOADED, GetEventDataMap());
 }
 
 // ----------------------------------------------------------------------------
-void Config::HandleFileChanged(StringHash eventType, VariantMap& eventData)
+void GameConfig::HandleFileChanged(StringHash eventType, VariantMap& eventData)
 {
     using namespace FileChanged;
     (void)eventType;

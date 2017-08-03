@@ -1,12 +1,13 @@
 #pragma once
 
+#include "lightship/config.h"
 #include <Urho3D/Core/Object.h>
 
 namespace Urho3D {
     class Node;
 }
 
-class TrackingCamera : public Urho3D::Object
+class LIGHTSHIP_PUBLIC_API TrackingCamera : public Urho3D::Object
 {
     URHO3D_OBJECT(TrackingCamera, Urho3D::Object);
 

@@ -1,9 +1,10 @@
 #pragma once
 
+#include "lightship/config.h"
 #include <Urho3D/Math/Vector3.h>
 #include <Urho3D/Math/Matrix3.h>
 
-class Math
+class LIGHTSHIP_PUBLIC_API Math
 {
 public:
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lightship/config.h"
 #include <Urho3D/Core/Object.h>
 
 namespace Urho3D {
@@ -7,12 +8,12 @@ namespace Urho3D {
     class XMLFile;
 }
 
-class Config : public Urho3D::Object
+class LIGHTSHIP_PUBLIC_API GameConfig : public Urho3D::Object
 {
-    URHO3D_OBJECT(Config, Urho3D::Object)
+    URHO3D_OBJECT(GameConfig, Urho3D::Object)
 
 public:
-    Config(Urho3D::Context* context);
+    GameConfig(Urho3D::Context* context);
 
     void Load(Urho3D::String fileName);
     void LoadXML(Urho3D::XMLFile* xml);

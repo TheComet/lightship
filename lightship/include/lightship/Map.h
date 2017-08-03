@@ -1,10 +1,11 @@
 #pragma once
 
+#include "lightship/config.h"
 #include <Urho3D/Scene/Component.h>
 
 class MapState;
 
-class Map : public Urho3D::Component
+class LIGHTSHIP_PUBLIC_API Map : public Urho3D::Component
 {
     URHO3D_OBJECT(Map, Urho3D::Component);
 

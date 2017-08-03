@@ -1,5 +1,5 @@
-#include "lightship/Config.h"
 #include "lightship/DebugTextScroll.h"
+#include "lightship/GameConfig.h"
 #include "lightship/Lightship.h"
 #include "lightship/Map.h"
 #include "lightship/MapState.h"
@@ -69,7 +69,7 @@ void Lightship::Start()
     CreateCamera();
     CreateDebugHud();
 
-    GetSubsystem<Config>()->Load("Config/Config.xml");
+    GetSubsystem<GameConfig>()->Load("Config/Config.xml");
 
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(Lightship, HandleKeyDown));
     SubscribeToEvent(E_POSTRENDERUPDATE, URHO3D_HANDLER(Lightship, HandlePostRenderUpdate));
@@ -85,7 +85,7 @@ void Lightship::Stop()
 void Lightship::RegisterSubsystems()
 {
     context_->RegisterSubsystem(new Script(context_));
-    context_->RegisterSubsystem(new Config(context_));
+    context_->RegisterSubsystem(new GameConfig(context_));
 #ifdef DEBUG
     context_->RegisterSubsystem(new DebugTextScroll(context_));
     GetSubsystem<DebugTextScroll>()->SetTextCount(20);

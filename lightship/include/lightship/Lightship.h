@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lightship/config.h"
 #include <Urho3D/Engine/Application.h>
 
 namespace Urho3D {
@@ -13,7 +14,7 @@ namespace Urho3D {
 class MapState;
 class TrackingCamera;
 
-class Lightship : public Urho3D::Application
+class LIGHTSHIP_PUBLIC_API Lightship : public Urho3D::Application
 {
 public:
     enum DebugDrawMode
