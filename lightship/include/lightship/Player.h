@@ -13,4 +13,10 @@ public:
 
 protected:
     virtual void OnNodeSet(Urho3D::Node* node) override;
+
+private:
+    void HandleUpdate(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+
+private:
+    Urho3D::SharedPtr<Urho3D::Node> modelNode_;
 };

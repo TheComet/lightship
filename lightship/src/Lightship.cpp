@@ -3,6 +3,7 @@
 #include "lightship/Lightship.h"
 #include "lightship/Map.h"
 #include "lightship/MapState.h"
+#include "lightship/Player.h"
 #include "lightship/TrackingCamera.h"
 
 #include <Urho3D/AngelScript/Script.h>
@@ -67,9 +68,10 @@ void Lightship::Start()
     RegisterComponents();
     LoadScene();
     CreateCamera();
+    CreatePlayer();
     CreateDebugHud();
 
-    GetSubsystem<GameConfig>()->Load("Config/Config.xml");
+    GetSubsystem<GameConfig>()->Open("Config/GameConfig.xml");
 
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(Lightship, HandleKeyDown));
     SubscribeToEvent(E_POSTRENDERUPDATE, URHO3D_HANDLER(Lightship, HandlePostRenderUpdate));
@@ -96,6 +98,7 @@ void Lightship::RegisterSubsystems()
 void Lightship::RegisterComponents()
 {
     Map::RegisterObject(context_);
+    Player::RegisterObject(context_);
 }
 
 // ----------------------------------------------------------------------------
@@ -155,6 +158,11 @@ void Lightship::CreateCamera()
 // ----------------------------------------------------------------------------
 void Lightship::CreatePlayer()
 {
+    Node* playerNode = scene_->CreateChild("Player");
+    playerNode->CreateComponent<Player>();
+    playerNode->SetPosition(Vector3(13, 0, 10));
+
+    trackingCamera_->SetTrackNode(playerNode);
 }
 
 // ----------------------------------------------------------------------------

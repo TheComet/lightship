@@ -3,10 +3,11 @@
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Scene/Scene.h>
 #include <Urho3D/Scene/Node.h>
-#include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/Graphics/StaticModel.h>
 #include <Urho3D/Graphics/Model.h>
 #include <Urho3D/Graphics/Material.h>
+#include <Urho3D/Resource/ResourceCache.h>
+#include <Urho3D/Resource/XMLFile.h>
 
 using namespace Urho3D;
 
@@ -31,6 +32,8 @@ void Map::SetState(MapState* state)
 // ----------------------------------------------------------------------------
 void Map::CreateFromState()
 {
+    ResourceCache* cache = GetSubsystem<ResourceCache>();
+
     for (int y = 0; y != state_->GetHeight(); ++y)
         for (int x = 0; x != state_->GetWidth(); ++x)
         {
@@ -48,6 +51,15 @@ void Map::CreateFromState()
         Node* node = CreateTrigger();
         node->SetPosition(Vector3(it->posX_, 0, it->posY_));
         node->SetScale(it->radius_ * 2.0);
+    }
+
+    XMLFile* xmlFile = cache->GetResource<XMLFile>("Prefabs/House_001.xml");
+    if (xmlFile != NULL)
+    {
+        Node* node = mapNode_->CreateChild("House");
+        node->LoadXML(xmlFile->GetRoot());
+        node->SetPosition(Vector3(4, 0, 5));
+        node->SetScale(0.5f);
     }
 }
 

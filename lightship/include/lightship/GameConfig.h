@@ -1,23 +1,35 @@
 #pragma once
 
 #include "lightship/config.h"
-#include <Urho3D/Core/Object.h>
+#include <Urho3D/Scene/Serializable.h>
 
 namespace Urho3D {
     class Context;
     class XMLFile;
 }
 
-class LIGHTSHIP_PUBLIC_API GameConfig : public Urho3D::Object
+class LIGHTSHIP_PUBLIC_API GameConfig : public Urho3D::Serializable
 {
-    URHO3D_OBJECT(GameConfig, Urho3D::Object)
+    URHO3D_OBJECT(GameConfig, Urho3D::Serializable)
 
 public:
     GameConfig(Urho3D::Context* context);
 
-    void Load(Urho3D::String fileName);
-    void LoadXML(Urho3D::XMLFile* xml);
+    void Open(Urho3D::String fileName);
+    void OpenXML(Urho3D::XMLFile* xml);
+
+    virtual bool LoadXML(const Urho3D::XMLElement& source, bool setInstanceDefault=false) override;
     void Reload();
+
+public:
+    struct PlayerData
+    {
+        struct Rotate
+        {
+            float speed;
+            float tilt;
+        } rotate;
+    } player;
 
 private:
     void HandleFileChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);

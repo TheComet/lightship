@@ -11,35 +11,54 @@ using namespace Urho3D;
 
 // ----------------------------------------------------------------------------
 GameConfig::GameConfig(Context* context) :
-    Object(context)
+    Serializable(context)
 {
+    memset(&player, 0, sizeof(player));
+
     SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(GameConfig, HandleFileChanged));
 }
 
 // ----------------------------------------------------------------------------
-void GameConfig::Load(String fileName)
+void GameConfig::Open(String fileName)
 {
     xml_ = GetSubsystem<ResourceCache>()->GetResource<XMLFile>(fileName);
     Reload();
 }
 
 // ----------------------------------------------------------------------------
-void GameConfig::LoadXML(XMLFile* xml)
+void GameConfig::OpenXML(XMLFile* xml)
 {
     xml_ = xml;
     Reload();
 }
 
 // ----------------------------------------------------------------------------
+bool GameConfig::LoadXML(const Urho3D::XMLElement& source, bool setInstanceDefault)
+{
+    XMLElement playerNode = source.GetChild("player");
+    XMLElement rotateNode = playerNode.GetChild("rotate");
+    player.rotate.speed = rotateNode.GetFloat("speed");
+    player.rotate.tilt = rotateNode.GetFloat("tilt");
+
+    return true;
+}
+
+// ----------------------------------------------------------------------------
 void GameConfig::Reload()
 {
+    URHO3D_LOGINFO("[Config] Reloading config");
+
     if(!xml_)
     {
-        URHO3D_LOGERROR("[Config] Failed to load XML file");
+        URHO3D_LOGERROR("[Config] Config file not open");
         return;
     }
 
-    XMLElement root = xml_->GetRoot();
+    if (LoadXML(xml_->GetRoot()) == false)
+    {
+        URHO3D_LOGERROR("[Config] Failed to load XML");
+        return;
+    }
 
     SendEvent(E_GAMECONFIGRELOADED, GetEventDataMap());
 }
@@ -52,7 +71,6 @@ void GameConfig::HandleFileChanged(StringHash eventType, VariantMap& eventData)
 
     if(xml_ && xml_->GetName() == eventData[P_RESOURCENAME].GetString())
     {
-        URHO3D_LOGINFO("[Config] Reloading config");
         Reload();
     }
 }
