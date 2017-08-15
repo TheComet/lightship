@@ -1,4 +1,4 @@
-#include "lightship/Lightship.h"
+#include "lightship-server/ServerApplication.h"
 
 #include <stdio.h>
 
@@ -22,6 +22,6 @@ int main(int argc, char** argv)
     }
 
     SharedPtr<Context> context(new Context);
-    SharedPtr<Application> app(new Lightship(context));
+    SharedPtr<Application> app(new ServerApplication(context));
     return app->Run();
 }

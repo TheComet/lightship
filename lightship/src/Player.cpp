@@ -23,6 +23,22 @@ Player::Player(Context* context) :
 void Player::RegisterObject(Urho3D::Context* context)
 {
     context->RegisterFactory<Player>("Lightship");
+/*
+    URHO3D_ACCESSOR_ATTRIBUTE("Primary Color", GetPrimaryColor, SetPrimaryColor, Color, Color(1, 1, 1), AM_DEFAULT);
+    URHO3D_ACCESSOR_ATTRIBUTE("Decorative Color", GetDecorativeColor, SetDecorativeColor, Color, Color(1, 1, 1), AM_DEFAULT);
+    URHO3D_ACCESSOR_ATTRIBUTE("Position", GetPosition, SetPosition, Vector2, Vector2(0, 0), AM_DEFAULT | AM_LATESTDATA);*/
+}
+
+// ----------------------------------------------------------------------------
+const Color& Player::GetPrimaryColor() const
+{
+    return playerColor_;
+}
+
+// ----------------------------------------------------------------------------
+void Player::SetPrimaryColor(const Color& color)
+{
+    playerColor_ = color;
 }
 
 // ----------------------------------------------------------------------------
