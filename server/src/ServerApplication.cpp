@@ -1,6 +1,7 @@
 #include "lightship/Map.h"
 #include "lightship/MapState.h"
 #include "lightship-server/ServerApplication.h"
+#include "lightship-server/SignalHandler.h"
 #include <Urho3D/Graphics/DebugRenderer.h>
 #include <Urho3D/Graphics/Octree.h>
 #include <Urho3D/Graphics/Light.h>
@@ -35,8 +36,10 @@ void ServerApplication::Start()
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     cache->SetAutoReloadResources(true);
 
+    RegisterSubsystems();
     //LoadScene();
     SubscribeToEvents();
+
     GetSubsystem<Network>()->StartServer(1337);
 }
 
@@ -44,6 +47,12 @@ void ServerApplication::Start()
 void ServerApplication::Stop()
 {
     GetSubsystem<Network>()->StopServer();
+}
+
+// ----------------------------------------------------------------------------
+void ServerApplication::RegisterSubsystems()
+{
+    context_->RegisterSubsystem(new SignalHandler(context_));
 }
 
 // ----------------------------------------------------------------------------

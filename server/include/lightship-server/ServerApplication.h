@@ -21,6 +21,7 @@ public:
     virtual void Stop() override;
 
 private:
+    void RegisterSubsystems();
     void LoadScene();
     void SubscribeToEvents();
 

@@ -1,8 +1,19 @@
+if (WIN32 OR CYGWIN)
+    set (PLATFORM_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/src/platform/not-implemented")
+elseif (UNIX)
+    set (PLATFORM_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/src/platform/linux")
+else ()
+    set (PLATFORM_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/src/platform/not-implemented")
+endif ()
+
 set (TARGET_NAME lightship-server)
 set (LIBS lightship)
 set (INCLUDE_DIRS
     "include"
     "${CMAKE_SOURCE_DIR}/lightship/include"
     "${CMAKE_BINARY_DIR}/lightship/include/generated")
-define_source_files (RECURSE)
+file (GLOB SOURCE_FILES
+    "src/*.cpp"
+    "${PLATFORM_SOURCE_DIR}/*.c")
+
 setup_main_executable ()
