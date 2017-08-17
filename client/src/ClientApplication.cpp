@@ -1,8 +1,18 @@
 #include "lightship-client/ClientApplication.h"
+#include "lightship/DebugTextScroll.h"
+#include "lightship/GameConfig.h"
+#include "lightship/Map.h"
 #include "lightship/MapState.h"
+#include "lightship/Player.h"
+#include "lightship/TrackingCamera.h"
+#include <Urho3D/AngelScript/Script.h>
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Engine/DebugHud.h>
+#include <Urho3D/Graphics/Camera.h>
 #include <Urho3D/Graphics/DebugRenderer.h>
+#include <Urho3D/Graphics/Octree.h>
+#include <Urho3D/Graphics/Renderer.h>
+#include <Urho3D/Graphics/Viewport.h>
 #include <Urho3D/Input/Input.h>
 #include <Urho3D/Input/InputEvents.h>
 #include <Urho3D/Network/Network.h>
@@ -32,15 +42,49 @@ void ClientApplication::Setup()
 // ----------------------------------------------------------------------------
 void ClientApplication::Start()
 {
+    RegisterStuff();
+    CreateDebugHud();
     SubscribeToEvents();
 
+    GetSubsystem<Input>()->SetMouseVisible(true);
+
+    scene_ = new Scene(context_);
+    scene_->CreateComponent<Octree>(LOCAL);
+    MapState* mapState = scene_->CreateComponent<MapState>(LOCAL);
+    Map* map = scene_->CreateComponent<Map>(LOCAL);
+    map->SetState(mapState);
+
+    CreateCamera();
+
+    GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
     GetSubsystem<Network>()->Connect("127.0.0.1", 1337, scene_);
+
+    mapState->RequestMapState();
 }
 
 // ----------------------------------------------------------------------------
 void ClientApplication::Stop()
 {
     GetSubsystem<Network>()->Disconnect();
+}
+
+// ----------------------------------------------------------------------------
+void ClientApplication::RegisterStuff()
+{
+    // Client only subsystems
+#ifdef DEBUG
+    context_->RegisterSubsystem(new DebugTextScroll(context_));
+    GetSubsystem<DebugTextScroll>()->SetTextCount(20);
+#endif
+
+    // Client/Server subsystems
+    context_->RegisterSubsystem(new Script(context_));
+    context_->RegisterSubsystem(new GameConfig(context_));
+
+    // Client/Server components
+    Map::RegisterObject(context_);
+    MapState::RegisterObject(context_);
+    Player::RegisterObject(context_);
 }
 
 // ----------------------------------------------------------------------------
@@ -60,6 +104,36 @@ void ClientApplication::CreateDebugHud()
     if(debugHud_)
         debugHud_->SetDefaultStyle(style);
 #endif
+}
+
+// ----------------------------------------------------------------------------
+void ClientApplication::CreateCamera()
+{
+    Renderer* renderer = GetSubsystem<Renderer>();
+    if(renderer == NULL)
+        return;
+
+    /*
+     * The camera is attached to a "rotate node", which is in turn attached to
+     * a "move" node. The rotation controller is separate from the movement
+     * controller.
+     */
+    Node* rotateNode = scene_->CreateChild("Camera", LOCAL);
+    Node* cameraNode = rotateNode->CreateChild("Camera Rotate", LOCAL);
+    Camera* camera = cameraNode->CreateComponent<Camera>();
+    camera->SetFarClip(300.0f);
+
+    // Give the camera a viewport
+    Viewport* viewport = new Viewport(context_, scene_, camera);
+    viewport->SetDrawDebug(true);
+    renderer->SetViewport(0, viewport);
+
+    trackingCamera_ = new TrackingCamera(context_);
+    trackingCamera_->SetNodes(rotateNode, cameraNode);
+
+    rotateNode->SetPosition(Vector3(13, -5, 15));
+    rotateNode->SetRotation(Quaternion(30, 0, 0));
+    cameraNode->SetPosition(Vector3(0, 0, -30));
 }
 
 // ----------------------------------------------------------------------------

@@ -16,12 +16,6 @@ SignalHandler::SignalHandler(Context* context) :
 }
 
 // ----------------------------------------------------------------------------
-void SignalHandler::RegisterObject(Urho3D::Context* context)
-{
-    context->RegisterFactory<SignalHandler>("Lightship");
-}
-
-// ----------------------------------------------------------------------------
 void SignalHandler::HandleUpdate(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
 {
     if (signals_exit_requested())

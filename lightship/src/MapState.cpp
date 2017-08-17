@@ -1,10 +1,14 @@
 #include "lightship/MapState.h"
+#include "lightship/Protocol.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Graphics/Model.h>
 #include <Urho3D/Graphics/Material.h>
 #include <Urho3D/Graphics/StaticModel.h>
 #include <Urho3D/IO/File.h>
 #include <Urho3D/IO/Log.h>
+#include <Urho3D/IO/MemoryBuffer.h>
+#include <Urho3D/Network/Network.h>
+#include <Urho3D/Network/NetworkEvents.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/Resource/XMLElement.h>
 #include <Urho3D/Scene/Scene.h>
@@ -29,10 +33,27 @@ static const char* tileDataMetaStr[] = {
     NULL
 };
 
+enum NetworkMessageAction
+{
+    REQUEST_STATE = 0,
+    RECEIVE_STATE,
+    DELTA
+};
+
 // ----------------------------------------------------------------------------
 MapState::MapState(Context* context) :
-    Serializable(context)
+    Component(context),
+    playerCount_(0),
+    width_(0),
+    height_(0)
 {
+    SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(MapState, HandleNetworkMessage));
+}
+
+// ----------------------------------------------------------------------------
+void MapState::RegisterObject(Context* context)
+{
+    context->RegisterFactory<MapState>("Lightship");
 }
 
 // ----------------------------------------------------------------------------
@@ -542,4 +563,62 @@ void MapState::ResizeMap(uint8_t x, uint8_t y)
     width_ = x;
     height_ = y;
     tileData_.Resize(width_ * height_);
+}
+
+// ----------------------------------------------------------------------------
+void MapState::RequestMapState()
+{
+    Connection* connection = GetSubsystem<Network>()->GetServerConnection();
+    if (connection == NULL)
+    {
+        URHO3D_LOGERROR("Attempted to request map state, but there is no connection to the server!");
+        return;
+    }
+
+    URHO3D_LOGDEBUG("Requesting map state...");
+    VectorBuffer buffer;
+    buffer.WriteUByte(REQUEST_STATE);
+    connection->SendMessage(MSG_MAPSTATE, true, false, buffer);
+}
+#include "lightship/Map.h"
+// ----------------------------------------------------------------------------
+void MapState::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
+{
+    using namespace NetworkMessage;
+    int messageID = eventData[P_MESSAGEID].GetInt();
+
+    if (messageID != MSG_MAPSTATE)
+        return;
+
+    MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
+    NetworkMessageAction action = static_cast<NetworkMessageAction>(buffer.ReadUByte());
+    switch (action)
+    {
+        case REQUEST_STATE:
+        {
+            URHO3D_LOGDEBUG("Sending map...");
+            VectorBuffer stateBuffer;
+            stateBuffer.WriteUByte(RECEIVE_STATE);
+            Save(stateBuffer);
+
+            Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
+            connection->SendMessage(MSG_MAPSTATE, true, true, stateBuffer);
+        } break;
+
+        case RECEIVE_STATE:
+        {
+            URHO3D_LOGDEBUG("Receiving map state...");
+            Load(buffer);
+            URHO3D_LOGDEBUGF("Received map is %dx%d with max %d players", GetWidth(), GetHeight(), GetPlayerCount());
+        } break;
+
+        case DELTA:
+        {
+
+        } break;
+
+        default:
+            URHO3D_LOGERROR("Received an invalid map state network action!");
+            break;
+    }
 }

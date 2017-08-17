@@ -2,7 +2,7 @@
 
 #include <Urho3D/Engine/Application.h>
 
-class MapState;
+class TrackingCamera;
 
 namespace Urho3D {
     class DebugHud;
@@ -26,16 +26,17 @@ public:
     virtual void Stop() override;
 
 private:
-    void CreateDebugHud();
+    void RegisterStuff();
     void SubscribeToEvents();
+    void CreateDebugHud();
+    void CreateCamera();
 
     void HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandlePostRenderUpdate(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 
 private:
     DebugDrawMode debugDrawMode_;
-    Urho3D::SharedPtr<MapState> map_;
+    Urho3D::SharedPtr<TrackingCamera> trackingCamera_;
     Urho3D::SharedPtr<Urho3D::Scene> scene_;
-    Urho3D::SharedPtr<Urho3D::XMLFile> xmlScene_;
     Urho3D::SharedPtr<Urho3D::DebugHud> debugHud_;
 };

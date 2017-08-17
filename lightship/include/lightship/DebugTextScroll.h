@@ -19,7 +19,7 @@ namespace Urho3D {
     class Text;
 }
 
-class DebugTextScroll : public Urho3D::Object
+class LIGHTSHIP_PUBLIC_API DebugTextScroll : public Urho3D::Object
 {
     URHO3D_OBJECT(DebugTextScroll, Urho3D::Object);
 

@@ -21,9 +21,14 @@ public:
     virtual void Stop() override;
 
 private:
-    void RegisterSubsystems();
-    void LoadScene();
+    void RegisterStuff();
+    void LoadMap(const Urho3D::String& fileName);
+    void CreatePlayer();
     void SubscribeToEvents();
+
+    void HandleConnectFailed(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleClientConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleClientDisonnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 
     void HandleFileChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleExitRequested(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lightship/config.h"
-#include <Urho3D/Scene/Serializable.h>
+#include <Urho3D/Scene/Component.h>
 #include <stdint.h>
 
 class TileState
@@ -44,12 +44,13 @@ public:
     float radius_;
 };
 
-class LIGHTSHIP_PUBLIC_API MapState : public Urho3D::Serializable
+class LIGHTSHIP_PUBLIC_API MapState : public Urho3D::Component
 {
-    URHO3D_OBJECT(MapState, Urho3D::Serializable);
+    URHO3D_OBJECT(MapState, Urho3D::Component);
 
 public:
     MapState(Urho3D::Context* context);
+    static void RegisterObject(Urho3D::Context* context);
 
     TileState& GetTile(uint8_t x, uint8_t y);
     const TileState& GetTile(uint8_t x, uint8_t y) const;
@@ -67,11 +68,16 @@ public:
 
     void ClearData();
 
+    // Networking related methods
+    void RequestMapState();
+
 private:
     bool LoadOMG_v1(const Urho3D::String& fileName, Urho3D::String* error);
     bool LoadOMG_v2(const Urho3D::String& fileName, Urho3D::String* error);
     bool ReadDBPString(Urho3D::Deserializer& source, Urho3D::String* out) const;
     void ResizeMap(uint8_t x, uint8_t y);
+
+    void HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 
 private:
     Urho3D::PODVector<TileState> tileData_;
