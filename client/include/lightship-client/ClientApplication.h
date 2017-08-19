@@ -1,5 +1,6 @@
 #pragma once
 
+#include "lightship-client/ClientAPI.h"
 #include <Urho3D/Engine/Application.h>
 
 class TrackingCamera;
@@ -10,7 +11,7 @@ namespace Urho3D {
     class XMLFile;
 }
 
-class ClientApplication : public Urho3D::Application
+class ClientApplication : public Urho3D::Application, public ClientAPI
 {
 public:
     enum DebugDrawMode
@@ -24,6 +25,9 @@ public:
     virtual void Setup() override;
     virtual void Start() override;
     virtual void Stop() override;
+
+    void ConnectToServer(const Urho3D::String& address, unsigned int port) override;
+    void DisconnectFromServer() override;
 
 private:
     void RegisterStuff();

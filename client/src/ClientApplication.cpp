@@ -1,4 +1,5 @@
 #include "lightship-client/ClientApplication.h"
+#include "lightship-client/MainMenu.h"
 #include "lightship/DebugTextScroll.h"
 #include "lightship/GameConfig.h"
 #include "lightship/Map.h"
@@ -20,6 +21,7 @@
 #include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/Resource/XMLFile.h>
 #include <Urho3D/Scene/Scene.h>
+#include <Urho3D/UI/UI.h>
 
 using namespace Urho3D;
 
@@ -46,26 +48,21 @@ void ClientApplication::Start()
     CreateDebugHud();
     SubscribeToEvents();
 
+    GetSubsystem<ResourceCache>()->SetAutoReloadResources(true);
+
+    MainMenu* menu = GetSubsystem<UI>()->GetRoot()->CreateChild<MainMenu>();
+    menu->SetClient(this);
+    //menu->SwitchToScreen(MainMenu::SCREEN_CONNECT);
+
     GetSubsystem<Input>()->SetMouseVisible(true);
-
-    scene_ = new Scene(context_);
-    scene_->CreateComponent<Octree>(LOCAL);
-    MapState* mapState = scene_->CreateComponent<MapState>(LOCAL);
-    Map* map = scene_->CreateComponent<Map>(LOCAL);
-    map->SetState(mapState);
-
-    CreateCamera();
-
     GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
-    GetSubsystem<Network>()->Connect("127.0.0.1", 1337, scene_);
-
-    mapState->RequestMapState();
 }
 
 // ----------------------------------------------------------------------------
 void ClientApplication::Stop()
 {
-    GetSubsystem<Network>()->Disconnect();
+    DisconnectFromServer();
+    GetSubsystem<UI>()->GetRoot()->RemoveAllChildren();
 }
 
 // ----------------------------------------------------------------------------
@@ -76,6 +73,9 @@ void ClientApplication::RegisterStuff()
     context_->RegisterSubsystem(new DebugTextScroll(context_));
     GetSubsystem<DebugTextScroll>()->SetTextCount(20);
 #endif
+
+    // Client only components
+    MainMenu::RegisterObject(context_);
 
     // Client/Server subsystems
     context_->RegisterSubsystem(new Script(context_));
@@ -104,6 +104,31 @@ void ClientApplication::CreateDebugHud()
     if(debugHud_)
         debugHud_->SetDefaultStyle(style);
 #endif
+}
+
+// ----------------------------------------------------------------------------
+void ClientApplication::ConnectToServer(const Urho3D::String& address, unsigned int port)
+{
+    scene_ = new Scene(context_);
+    GetSubsystem<Network>()->Connect(address, port, scene_);
+
+    scene_->CreateComponent<Octree>(LOCAL);
+    MapState* mapState = scene_->CreateComponent<MapState>(LOCAL);
+    Map* map = scene_->CreateComponent<Map>(LOCAL);
+
+    map->SetState(mapState);
+    mapState->RequestMapState();
+}
+
+// ----------------------------------------------------------------------------
+void ClientApplication::DisconnectFromServer()
+{
+    Network* network = GetSubsystem<Network>();
+    if (network->GetServerConnection() == NULL)
+        return;
+
+    network->Disconnect();
+    scene_ = NULL;
 }
 
 // ----------------------------------------------------------------------------
