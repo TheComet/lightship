@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lightship-client/ClientAPI.h"
+#include "lightship/API/ClientAPI.h"
 #include <Urho3D/Engine/Application.h>
 
 class TrackingCamera;
@@ -26,8 +26,25 @@ public:
     virtual void Start() override;
     virtual void Stop() override;
 
-    void ConnectToServer(const Urho3D::String& address, unsigned int port) override;
+    bool ConnectToServer(const Urho3D::String& address, unsigned int port) override;
+    void AbortConnectingToServer() override;
     void DisconnectFromServer() override;
+    void Quit() override;
+
+    Urho3D::String GetUsername() const override;
+    void SetUsername(const Urho3D::String& username) override;
+    unsigned int GetGlobalID() const override;
+    void SetGlobalID(unsigned int ID) override;
+    char GetLocalID() const override;
+    void SetLocalID(char ID) override;
+
+    void CreateGame(const Urho3D::String& gameName) override;
+    void JoinGame(unsigned int gameID) override;
+    void LeaveGame() override;
+
+    void SendGlobalChatMessage(const Urho3D::String& message) override;
+    void SendLobbyChatMessage(const Urho3D::String& message) override;
+    void SendInGameChatMessage(const Urho3D::String& message) override;
 
 private:
     void RegisterStuff();
@@ -37,10 +54,14 @@ private:
 
     void HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandlePostRenderUpdate(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleChatMessage(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 
 private:
     DebugDrawMode debugDrawMode_;
     Urho3D::SharedPtr<TrackingCamera> trackingCamera_;
     Urho3D::SharedPtr<Urho3D::Scene> scene_;
     Urho3D::SharedPtr<Urho3D::DebugHud> debugHud_;
+    Urho3D::String username_;
+    unsigned int guid_;
+    char luid_;
 };

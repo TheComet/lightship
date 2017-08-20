@@ -1,7 +1,9 @@
+#include "lightship/Chat.h"
 #include "lightship/GameConfig.h"
 #include "lightship/Map.h"
 #include "lightship/MapState.h"
 #include "lightship/Player.h"
+#include "lightship/Protocol.h"
 #include "lightship-server/ServerApplication.h"
 #include "lightship-server/SignalHandler.h"
 #include <Urho3D/AngelScript/Script.h>
@@ -10,6 +12,7 @@
 #include <Urho3D/Graphics/Light.h>
 #include <Urho3D/Input/InputEvents.h>
 #include <Urho3D/IO/Log.h>
+#include <Urho3D/IO/MemoryBuffer.h>
 #include <Urho3D/Resource/ResourceEvents.h>
 #include <Urho3D/Network/Network.h>
 #include <Urho3D/Network/NetworkEvents.h>
@@ -77,6 +80,8 @@ void ServerApplication::SubscribeToEvents()
     SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(ServerApplication, HandleConnectFailed));
     SubscribeToEvent(E_CLIENTCONNECTED, URHO3D_HANDLER(ServerApplication, HandleClientConnected));
     SubscribeToEvent(E_CLIENTDISCONNECTED, URHO3D_HANDLER(ServerApplication, HandleClientDisonnected));
+    SubscribeToEvent(E_CLIENTIDENTITY, URHO3D_HANDLER(ServerApplication, HandleClientIdentity));
+    SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(ServerApplication, HandleNetworkMessage));
     SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(ServerApplication, HandleFileChanged));
     SubscribeToEvent(E_EXITREQUESTED, URHO3D_HANDLER(ServerApplication, HandleExitRequested));
 }
@@ -114,12 +119,12 @@ void ServerApplication::CreatePlayer()
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleConnectFailed(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void ServerApplication::HandleConnectFailed(StringHash eventType, VariantMap& eventData)
 {
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleClientConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void ServerApplication::HandleClientConnected(StringHash eventType, VariantMap& eventData)
 {
     using namespace ClientConnected;
 
@@ -129,12 +134,95 @@ void ServerApplication::HandleClientConnected(Urho3D::StringHash eventType, Urho
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleClientDisonnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void ServerApplication::HandleClientDisonnected(StringHash eventType, VariantMap& eventData)
 {
+    using namespace ClientDisconnected;
+
+    Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
+    ConnectedUsers::Iterator it = connectedUsers_.Find(connection);
+    if (it == connectedUsers_.End())
+        return;
+
+    VectorBuffer buffer;
+    buffer.WriteUByte(Chat::GLOBAL);
+    buffer.WriteString("<-- " + it->second_.name_ + " left the server!");
+    GetSubsystem<Network>()->BroadcastMessage(MSG_CHATMESSAGE, true, false, buffer);
+
+    connectedUsers_.Erase(it);
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleFileChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void ServerApplication::HandleClientIdentity(StringHash eventType, VariantMap& eventData)
+{
+    using namespace ClientIdentity;
+
+    Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
+    const VariantMap& identity = connection->GetIdentity();
+    Variant* var = identity["Username"];
+    if (var == NULL)
+    {
+        URHO3D_LOGERROR("Client didn't provide username!");
+        connection->Disconnect();
+        return;
+    }
+
+    String username = var->GetString();
+    if (username.Empty())
+    {
+        URHO3D_LOGERROR("Client provided an empty username!");
+        connection->Disconnect();
+        return;
+    }
+
+    for (ConnectedUsers::ConstIterator it = connectedUsers_.Begin(); it != connectedUsers_.End(); ++it)
+    {
+        if (it->second_.name_ == username)
+        {
+            eventData[P_ALLOW] = false;
+            connection->Disconnect();
+            return;
+        }
+    }
+
+    connectedUsers_[connection] = {
+        username
+    };
+
+    VectorBuffer buffer;
+    buffer.WriteUByte(Chat::GLOBAL);
+    buffer.WriteString("--> " + username + " joined the server!");
+    GetSubsystem<Network>()->BroadcastMessage(MSG_CHATMESSAGE, true, false, buffer);
+}
+
+// ----------------------------------------------------------------------------
+void ServerApplication::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
+{
+    using namespace NetworkMessage;
+    int messageID = eventData[P_MESSAGEID].GetInt();
+    Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
+
+    if (messageID == MSG_CHATMESSAGE)
+    {
+        MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
+        unsigned char messageTarget = buffer.ReadUByte();
+        String message = buffer.ReadString();
+        URHO3D_LOGDEBUGF("Received message \"%s\"", message.CString());
+
+        // Append username to it, then broadcast
+        message = "<" + connectedUsers_[connection].name_ + "> " + message;
+
+        if (messageTarget & Chat::GLOBAL)
+        {
+            VectorBuffer outBuffer;
+            outBuffer.WriteUByte(messageTarget);
+            outBuffer.WriteString(message);
+            GetSubsystem<Network>()->BroadcastMessage(MSG_CHATMESSAGE, true, false, outBuffer);
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+void ServerApplication::HandleFileChanged(StringHash eventType, VariantMap& eventData)
 {
     if(xmlScene_ && xmlScene_->GetName() == eventData[FileChanged::P_RESOURCENAME].GetString())
     {
@@ -147,7 +235,7 @@ void ServerApplication::HandleFileChanged(Urho3D::StringHash eventType, Urho3D::
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleExitRequested(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void ServerApplication::HandleExitRequested(StringHash eventType, VariantMap& eventData)
 {
     engine_->Exit();
 }

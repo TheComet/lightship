@@ -1,12 +1,18 @@
 #include "lightship-client/MainMenu.h"
-#include "lightship-client/MenuScreen.h"
-#include "lightship-client/ClientAPI.h"
+#include "lightship/API/ClientAPI.h"
+#include "lightship/Chat.h"
+#include "lightship/Protocol.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Core/StringUtils.h>
 #include <Urho3D/IO/Log.h>
+#include <Urho3D/IO/MemoryBuffer.h>
+#include <Urho3D/Input/InputEvents.h>
+#include <Urho3D/Network/NetworkEvents.h>
+#include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/UI/UI.h>
 #include <Urho3D/UI/UIEvents.h>
 #include <Urho3D/UI/LineEdit.h>
+#include <Urho3D/UI/ListView.h>
 #include <Urho3D/UI/Text.h>
 
 using namespace Urho3D;
@@ -33,7 +39,7 @@ static const char* g_screenUIResources[] = {
 };
 
 template <class T>
-T* GetUIChild(const UIElement* element, const Urho3D::String& name)
+T* GetUIChild(const UIElement* element, const String& name)
 {
     UIElement* child = element->GetChild(name, true);
     if (child == NULL)
@@ -49,29 +55,31 @@ MainMenu::MainMenu(Context* context) :
     client_(NULL),
     currentScreen_(SCREEN_MAINLOCAL)
 {
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::RegisterObject(Context* context)
+{
+    context->RegisterFactory<MainMenu>("Lightship");
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::Initialise()
+{
+        UIElement* root = GetSubsystem<UI>()->GetRoot();
+    ResourceCache* cache = GetSubsystem<ResourceCache>();
+    XMLFile* xmlDefaultStyle = cache->GetResource<XMLFile>("UI/DefaultStyle.xml");
+
     for (int i = 0; i != SCREEN_COUNT; ++i)
     {
-        screens_[i] = new MenuScreen(context_);
-        screens_[i]->LoadUI(g_screenUIResources[i]);
+        XMLFile* xml = cache->GetResource<XMLFile>(g_screenUIResources[i]);
+        screens_[i] = new UIElement(context_);
+        screens_[i]->LoadXML(xml->GetRoot(), xmlDefaultStyle);
+        screens_[i]->SetStyleAuto();
+        screens_[i]->SetAlignment(HA_CENTER, VA_CENTER);
         screens_[i]->SetVisible(false);
-        AddChild(screens_[i]);
+        root->AddChild(screens_[i]);
     }
-
-    SetHorizontalAlignment(HA_CENTER);
-    SetVerticalAlignment(VA_CENTER);
-
-    /*
-     * Update our layout so the UI elements defined in the layout are able to
-     * calculate their preferred sizes, then position ourselves in the center
-     * of the screen.
-     *
-    UpdateLayout();
-    for (int i = 0; i != SCREEN_COUNT; ++i)
-    {
-        const IntVector2& rootSize = GetSubsystem<UI>()->GetRoot()->GetSize();
-        const IntVector2& elementSize = screens_[i]->GetSize();
-        screens_[i]->SetPosition((rootSize - elementSize) / 2);
-    }*/
 
     // Initial address to join
     {
@@ -82,14 +90,25 @@ MainMenu::MainMenu(Context* context) :
             URHO3D_LOGERROR("Failed to get element \"ServerAddress\" from SCREEN_CONNECT UI");
     }
 
+    // Add our custom chat box into the reserved UI element
+    {
+        UIElement* chatLayout = GetUIChild<UIElement>(screens_[SCREEN_MAINSERVER], "ChatMessages");
+        if (chatLayout == NULL)
+        {
+            URHO3D_LOGERROR("Failed to get UIElement object \"ChatMessages\" from UI");
+            return;
+        }
+        Chat* chat = new Chat(context_);
+        chat->SetStyleAuto();
+        chatLayout->AddChild(chat);
+        chat->Initialise();
+        chat->SetScope(Chat::GLOBAL);
+    }
+
     SwitchToScreen(currentScreen_);
 
 #define CONNECT_BUTTON(SCREEN, BTN) do {                                     \
-            if (screens_[SCREEN]->ui_ == NULL) {                             \
-                URHO3D_LOGERROR("Failed to load screen");                    \
-                break;                                                       \
-            }                                                                \
-            UIElement* button = screens_[SCREEN]->ui_->GetChild(g_buttonNames[BTN], true); \
+            UIElement* button = screens_[SCREEN]->GetChild(g_buttonNames[BTN], true); \
             if (button == NULL) {                                            \
                 URHO3D_LOGERRORF("Couldn't find button \"%s\" in UI", g_buttonNames[BTN]); \
             }                                                                \
@@ -113,12 +132,10 @@ MainMenu::MainMenu(Context* context) :
 #undef X
 
 #undef CONNECT_BUTTON
-}
 
-// ----------------------------------------------------------------------------
-void MainMenu::RegisterObject(Urho3D::Context* context)
-{
-    context->RegisterFactory<MainMenu>("Lightship");
+    SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(MainMenu, HandleConnectFailed));
+    SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerConnected));
+    SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerDisonnected));
 }
 
 // ----------------------------------------------------------------------------
@@ -154,39 +171,36 @@ void MainMenu::PopScreen()
 }
 
 // ----------------------------------------------------------------------------
-void MainMenu::HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+String MainMenu::Connect_GetUsername() const
 {
+    LineEdit* usernameLine = GetUIChild<LineEdit>(screens_[SCREEN_CONNECT], "Username");
+    if (usernameLine == NULL)
+    {
+        URHO3D_LOGERROR("Failed to get LineEdit object \"Username\" from UI");
+        return "";
+    }
+
+    return usernameLine->GetText();
 }
 
 // ----------------------------------------------------------------------------
-void MainMenu::Handle_BTN_MAINLOCAL_CONNECT(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void MainMenu::Connect_SetUsername(const String& username)
 {
-    SwitchToScreen(SCREEN_CONNECT);
-}
-void MainMenu::Handle_BTN_MAINLOCAL_MAPEDITOR(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
-}
-void MainMenu::Handle_BTN_MAINLOCAL_OPTIONS(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
-}
-void MainMenu::Handle_BTN_MAINLOCAL_QUIT(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
+    LineEdit* usernameLine = GetUIChild<LineEdit>(screens_[SCREEN_CONNECT], "Username");
+    if (usernameLine == NULL)
+    {
+        URHO3D_LOGERROR("Failed to get LineEdit object \"Username\" from UI");
+        return;
+    }
+
+    usernameLine->SetText(username);
 }
 
 // ----------------------------------------------------------------------------
-void MainMenu::Handle_BTN_MAINSERVER_CREATEGAME(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void MainMenu::Connect_GetAddressAndPort(String* address, unsigned int* port) const
 {
-}
-void MainMenu::Handle_BTN_MAINSERVER_JOINGAME(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
-}
-void MainMenu::Handle_BTN_MAINSERVER_DISCONNECT(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
-}
+    *port = 1337;
 
-// ----------------------------------------------------------------------------
-void MainMenu::Handle_BTN_CONNECT_OK(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
     LineEdit* addressLine = GetUIChild<LineEdit>(screens_[SCREEN_CONNECT], "ServerAddress");
     if (addressLine == NULL)
     {
@@ -195,44 +209,126 @@ void MainMenu::Handle_BTN_CONNECT_OK(Urho3D::StringHash eventType, Urho3D::Varia
     }
 
     Vector<String> addressAndPort = addressLine->GetText().Split(':');
-    String address = addressAndPort[0];
-    unsigned int port = 1337;
+    *address = addressAndPort[0];
     if (addressAndPort.Size() > 1)
-        port = ToUInt(addressAndPort[1]);
-
-    Text* connectMessage = GetUIChild<Text>(screens_[SCREEN_CONNECTING], "ConnectingMessage");
-    if (connectMessage == NULL)
-    {
-        URHO3D_LOGERROR("Failed to get Text object \"ConnectingMessage\" from UI");
-    }
-    else
-    {
-        String msg;
-        msg.AppendWithFormat("Connecting to %s on port %d...", address.CString(), port);
-        connectMessage->SetText(msg);
-    }
-
-    SwitchToScreen(SCREEN_CONNECTING);
-    client_->ConnectToServer(address, port);
-}
-void MainMenu::Handle_BTN_CONNECT_CANCEL(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
-    SwitchToScreen(SCREEN_MAINLOCAL);
+        *port = ToUInt(addressAndPort[1]);
 }
 
 // ----------------------------------------------------------------------------
-void MainMenu::Handle_BTN_CONNECTING_CANCEL(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void MainMenu::Connecting_SetMessage(const String& msg)
+{
+    Text* textElement = GetUIChild<Text>(screens_[SCREEN_CONNECTING], "ConnectingMessage");
+    if (textElement == NULL)
+    {
+        URHO3D_LOGERROR("Failed to get Text object \"ConnectingMessage\" from UI");
+        return;
+    }
+
+    textElement->SetText(msg);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::ConnectionFailed_SetMessage(const String& msg)
+{
+    Text* textElement = GetUIChild<Text>(screens_[SCREEN_CONNECTIONFAILED], "ErrorMessage");
+    if (textElement == NULL)
+    {
+        URHO3D_LOGERROR("Failed to get Text object \"ErrorMessage\" from UI");
+        return;
+    }
+
+    textElement->SetText(msg);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::HandleConnectFailed(StringHash eventType, VariantMap& eventData)
+{
+    SwitchToScreen(SCREEN_CONNECTIONFAILED);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::HandleServerConnected(StringHash eventType, VariantMap& eventData)
+{
+    SwitchToScreen(SCREEN_MAINSERVER);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::HandleServerDisonnected(StringHash eventType, VariantMap& eventData)
+{
+    SwitchToScreen(SCREEN_CONNECTIONFAILED);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::Handle_BTN_MAINLOCAL_CONNECT(StringHash eventType, VariantMap& eventData)
+{
+    SwitchToScreen(SCREEN_CONNECT);
+}
+void MainMenu::Handle_BTN_MAINLOCAL_MAPEDITOR(StringHash eventType, VariantMap& eventData)
+{
+}
+void MainMenu::Handle_BTN_MAINLOCAL_OPTIONS(StringHash eventType, VariantMap& eventData)
+{
+}
+void MainMenu::Handle_BTN_MAINLOCAL_QUIT(StringHash eventType, VariantMap& eventData)
+{
+    client_->Quit();
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::Handle_BTN_MAINSERVER_CREATEGAME(StringHash eventType, VariantMap& eventData)
+{
+}
+void MainMenu::Handle_BTN_MAINSERVER_JOINGAME(StringHash eventType, VariantMap& eventData)
+{
+}
+void MainMenu::Handle_BTN_MAINSERVER_DISCONNECT(StringHash eventType, VariantMap& eventData)
 {
     client_->DisconnectFromServer();
     SwitchToScreen(SCREEN_MAINLOCAL);
 }
 
 // ----------------------------------------------------------------------------
-void MainMenu::Handle_BTN_CONNECTIONFAILED_RETRY(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void MainMenu::Handle_BTN_CONNECT_OK(StringHash eventType, VariantMap& eventData)
+{
+    client_->SetUsername(Connect_GetUsername());
+    if (client_->GetUsername().Empty())
+    {
+        Connect_SetUsername("Please enter a username");
+        return;
+    }
+
+    String address;
+    unsigned int port;
+    Connect_GetAddressAndPort(&address, &port);
+
+    String msg;
+    msg.AppendWithFormat("Connecting to %s on port %d...", address.CString(), port);
+    Connecting_SetMessage(msg);
+
+    if (client_->ConnectToServer(address, port) == true)
+        SwitchToScreen(SCREEN_CONNECTING);
+    else
+        SwitchToScreen(SCREEN_CONNECTIONFAILED);
+}
+void MainMenu::Handle_BTN_CONNECT_CANCEL(StringHash eventType, VariantMap& eventData)
+{
+    client_->AbortConnectingToServer();
+    SwitchToScreen(SCREEN_MAINLOCAL);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::Handle_BTN_CONNECTING_CANCEL(StringHash eventType, VariantMap& eventData)
+{
+    client_->DisconnectFromServer();
+    SwitchToScreen(SCREEN_MAINLOCAL);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::Handle_BTN_CONNECTIONFAILED_RETRY(StringHash eventType, VariantMap& eventData)
 {
     SwitchToScreen(SCREEN_CONNECT);
 }
-void MainMenu::Handle_BTN_CONNECTIONFAILED_CANCEL(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void MainMenu::Handle_BTN_CONNECTIONFAILED_CANCEL(StringHash eventType, VariantMap& eventData)
 {
     SwitchToScreen(SCREEN_MAINLOCAL);
 }

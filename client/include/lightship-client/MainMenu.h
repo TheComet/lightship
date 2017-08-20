@@ -49,6 +49,7 @@ public:
     MainMenu(Urho3D::Context* context);
     static void RegisterObject(Urho3D::Context* context);
 
+    void Initialise();
     void SetClient(ClientAPI* client);
 
     void SwitchToScreen(Screen screen);
@@ -56,15 +57,26 @@ public:
     void PopScreen();
 
 private:
+    // helpers for interacting with UI elements
+    void Connect_SetUsername(const Urho3D::String& username);
+    Urho3D::String Connect_GetUsername() const;
+    void Connect_GetAddressAndPort(Urho3D::String* address, unsigned int* port) const;
+    void Connecting_SetMessage(const Urho3D::String& msg);
+    void ConnectionFailed_SetMessage(const Urho3D::String& msg);
+    Urho3D::String MainServer_GetAndClearChatBoxMessageIfSelected();
+
     // declares all screens handlers
 #define X(name) void Handle_##name(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     BUTTONS_ALL
 #undef X
 
-    // input events
+    // other events of interest
     void HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleConnectFailed(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleServerConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleServerDisonnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 
-    Urho3D::SharedPtr<MenuScreen> screens_[SCREEN_COUNT];
+    Urho3D::SharedPtr<Urho3D::UIElement> screens_[SCREEN_COUNT];
     Urho3D::PODVector<Screen> screenStack_;
     ClientAPI* client_;
     Screen currentScreen_;
