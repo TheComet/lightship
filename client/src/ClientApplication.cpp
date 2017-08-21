@@ -330,7 +330,7 @@ void ClientApplication::HandleKeyDown(StringHash eventType, VariantMap& eventDat
     }
 
     // Toggle mouse visibility (for debugging)
-    if(key == KEY_9)
+    if(key == KEY_F9)
         GetSubsystem<Input>()->SetMouseVisible(!GetSubsystem<Input>()->IsMouseVisible());
 #endif
 }

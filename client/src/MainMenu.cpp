@@ -86,7 +86,7 @@ void MainMenu::Initialise()
     {
         LineEdit* line = GetUIChild<LineEdit>(screens_[SCREEN_CONNECT], "ServerAddress");
         if (line != NULL)
-            line->SetText("127.0.0.1:1337");
+            line->SetText("127.0.0.1:2048");
         else
             URHO3D_LOGERROR("Failed to get element \"ServerAddress\" from SCREEN_CONNECT UI");
     }
