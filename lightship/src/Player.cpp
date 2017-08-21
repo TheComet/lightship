@@ -7,7 +7,7 @@
 #include <Urho3D/Graphics/StaticModel.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/Scene/Scene.h>
-
+#include <Urho3D/Resource/XMLFile.h>
 
 #include <iostream>
 

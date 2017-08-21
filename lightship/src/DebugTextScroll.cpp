@@ -3,6 +3,7 @@
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/IO/IOEvents.h>
+#include <Urho3D/IO/Log.h>
 #include <Urho3D/UI/UI.h>
 #include <Urho3D/UI/Text.h>
 #include <Urho3D/UI/Font.h>

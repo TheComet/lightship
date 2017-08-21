@@ -19,10 +19,10 @@ struct ConnectedUser
     Urho3D::String name_;
 };
 
-class ServerApplication : public Urho3D::Application, public ServerAPI
+class LightshipServerApplication : public Urho3D::Application, public ServerAPI
 {
 public:
-    ServerApplication(Urho3D::Context* context);
+	LightshipServerApplication(Urho3D::Context* context);
 
     virtual void Setup() override;
     virtual void Start() override;

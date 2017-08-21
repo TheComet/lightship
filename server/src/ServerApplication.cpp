@@ -25,19 +25,19 @@
 using namespace Urho3D;
 
 // ----------------------------------------------------------------------------
-ServerApplication::ServerApplication(Context* context) :
+LightshipServerApplication::LightshipServerApplication(Context* context) :
     Application(context)
 {
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::Setup()
+void LightshipServerApplication::Setup()
 {
     engineParameters_["Headless"] = true;
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::Start()
+void LightshipServerApplication::Start()
 {
     // configure resource cache to auto-reload resources when they change
     ResourceCache* cache = GetSubsystem<ResourceCache>();
@@ -53,13 +53,13 @@ void ServerApplication::Start()
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::Stop()
+void LightshipServerApplication::Stop()
 {
     GetSubsystem<Network>()->StopServer();
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::RegisterStuff()
+void LightshipServerApplication::RegisterStuff()
 {
     // Server only subsystems
     context_->RegisterSubsystem(new SignalHandler(context_));
@@ -75,19 +75,19 @@ void ServerApplication::RegisterStuff()
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::SubscribeToEvents()
+void LightshipServerApplication::SubscribeToEvents()
 {
-    SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(ServerApplication, HandleConnectFailed));
-    SubscribeToEvent(E_CLIENTCONNECTED, URHO3D_HANDLER(ServerApplication, HandleClientConnected));
-    SubscribeToEvent(E_CLIENTDISCONNECTED, URHO3D_HANDLER(ServerApplication, HandleClientDisonnected));
-    SubscribeToEvent(E_CLIENTIDENTITY, URHO3D_HANDLER(ServerApplication, HandleClientIdentity));
-    SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(ServerApplication, HandleNetworkMessage));
-    SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(ServerApplication, HandleFileChanged));
-    SubscribeToEvent(E_EXITREQUESTED, URHO3D_HANDLER(ServerApplication, HandleExitRequested));
+    SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(LightshipServerApplication, HandleConnectFailed));
+    SubscribeToEvent(E_CLIENTCONNECTED, URHO3D_HANDLER(LightshipServerApplication, HandleClientConnected));
+    SubscribeToEvent(E_CLIENTDISCONNECTED, URHO3D_HANDLER(LightshipServerApplication, HandleClientDisonnected));
+    SubscribeToEvent(E_CLIENTIDENTITY, URHO3D_HANDLER(LightshipServerApplication, HandleClientIdentity));
+    SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(LightshipServerApplication, HandleNetworkMessage));
+    SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(LightshipServerApplication, HandleFileChanged));
+    SubscribeToEvent(E_EXITREQUESTED, URHO3D_HANDLER(LightshipServerApplication, HandleExitRequested));
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::LoadMap(const String& fileName)
+void LightshipServerApplication::LoadMap(const String& fileName)
 {
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     XMLFile* file = cache->GetResource<XMLFile>(fileName);
@@ -111,7 +111,7 @@ void ServerApplication::LoadMap(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::CreatePlayer()
+void LightshipServerApplication::CreatePlayer()
 {
     Node* playerNode = scene_->CreateChild("Player");
     playerNode->CreateComponent<Player>();
@@ -119,12 +119,12 @@ void ServerApplication::CreatePlayer()
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleConnectFailed(StringHash eventType, VariantMap& eventData)
+void LightshipServerApplication::HandleConnectFailed(StringHash eventType, VariantMap& eventData)
 {
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleClientConnected(StringHash eventType, VariantMap& eventData)
+void LightshipServerApplication::HandleClientConnected(StringHash eventType, VariantMap& eventData)
 {
     using namespace ClientConnected;
 
@@ -134,7 +134,7 @@ void ServerApplication::HandleClientConnected(StringHash eventType, VariantMap& 
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleClientDisonnected(StringHash eventType, VariantMap& eventData)
+void LightshipServerApplication::HandleClientDisonnected(StringHash eventType, VariantMap& eventData)
 {
     using namespace ClientDisconnected;
 
@@ -152,7 +152,7 @@ void ServerApplication::HandleClientDisonnected(StringHash eventType, VariantMap
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleClientIdentity(StringHash eventType, VariantMap& eventData)
+void LightshipServerApplication::HandleClientIdentity(StringHash eventType, VariantMap& eventData)
 {
     using namespace ClientIdentity;
 
@@ -194,7 +194,7 @@ void ServerApplication::HandleClientIdentity(StringHash eventType, VariantMap& e
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
+void LightshipServerApplication::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
 {
     using namespace NetworkMessage;
     int messageID = eventData[P_MESSAGEID].GetInt();
@@ -247,7 +247,7 @@ void ServerApplication::HandleNetworkMessage(StringHash eventType, VariantMap& e
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleFileChanged(StringHash eventType, VariantMap& eventData)
+void LightshipServerApplication::HandleFileChanged(StringHash eventType, VariantMap& eventData)
 {
     if(xmlScene_ && xmlScene_->GetName() == eventData[FileChanged::P_RESOURCENAME].GetString())
     {
@@ -260,7 +260,7 @@ void ServerApplication::HandleFileChanged(StringHash eventType, VariantMap& even
 }
 
 // ----------------------------------------------------------------------------
-void ServerApplication::HandleExitRequested(StringHash eventType, VariantMap& eventData)
+void LightshipServerApplication::HandleExitRequested(StringHash eventType, VariantMap& eventData)
 {
     engine_->Exit();
 }

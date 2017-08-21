@@ -1,5 +1,4 @@
 #include "lightship-client/ClientApplication.h"
-#include <Urho3D/Engine/Application.h>
 
 #include <stdio.h>
 
@@ -11,8 +10,13 @@ void printHelp(const char* prog_name)
     printf("  -h, --help                           = Show this help");
 }
 
+#ifdef LIGHTSHIP_PLATFORM_WINDOWS
+int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hprevinstance, LPSTR lpcmdline, int ncmdshow)
+#else
 int main(int argc, char** argv)
+#endif
 {
+#ifndef LIGHTSHIP_PLATFORM_WINDOWS
     for(int i = 0; i != argc; ++i)
     {
         if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
@@ -21,6 +25,7 @@ int main(int argc, char** argv)
             return 0;
         }
     }
+#endif
 
     SharedPtr<Context> context(new Context);
     SharedPtr<Application> app(new ClientApplication(context));

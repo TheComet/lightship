@@ -1,4 +1,5 @@
 #include "mapconverter/MapConverter.h"
+#include "lightship/config.h"
 
 #include <stdio.h>
 
@@ -14,11 +15,16 @@ void printHelp(const char* prog_name)
     printf("  -h, --help                           = Show this help\n");
 }
 
+#ifdef LIGHTSHIP_PLATFORM_WINDOWS
+int WINAPI WinMain(HINSTANCE hinstance, HINSTANCE hprevinstance, LPSTR lpcmdline, int ncmdshow)
+#else
 int main(int argc, char** argv)
+#endif
 {
     SharedPtr<Context> context(new Context);
     SharedPtr<MapConverter> app(new MapConverter(context));
 
+#ifndef LIGHTSHIP_PLATFORM_WINDOWS
     for(int i = 1; i != argc; ++i)
     {
         if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
@@ -33,6 +39,7 @@ int main(int argc, char** argv)
         else
             app->SetOutputLocation(argv[i]);
     }
+#endif
 
     return app->Run();
 }

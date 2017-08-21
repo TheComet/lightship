@@ -67,7 +67,7 @@ void MainMenu::RegisterObject(Context* context)
 // ----------------------------------------------------------------------------
 void MainMenu::Initialise()
 {
-        UIElement* root = GetSubsystem<UI>()->GetRoot();
+    UIElement* root = GetSubsystem<UI>()->GetRoot();
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     XMLFile* xmlDefaultStyle = cache->GetResource<XMLFile>("UI/DefaultStyle.xml");
 
