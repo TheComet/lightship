@@ -144,9 +144,9 @@ void ServerApplication::HandleClientDisonnected(StringHash eventType, VariantMap
         return;
 
     VectorBuffer buffer;
-    buffer.WriteUByte(Chat::GLOBAL);
-    buffer.WriteString("<-- " + it->second_.name_ + " left the server!");
-    GetSubsystem<Network>()->BroadcastMessage(MSG_CHATMESSAGE, true, false, buffer);
+    buffer.WriteUByte(Chat::RECEIVE_LEFT_USER);
+    buffer.WriteString(it->second_.name_);
+    GetSubsystem<Network>()->BroadcastMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
 
     connectedUsers_.Erase(it);
 }
@@ -179,7 +179,6 @@ void ServerApplication::HandleClientIdentity(StringHash eventType, VariantMap& e
         if (it->second_.name_ == username)
         {
             eventData[P_ALLOW] = false;
-            connection->Disconnect();
             return;
         }
     }
@@ -189,9 +188,9 @@ void ServerApplication::HandleClientIdentity(StringHash eventType, VariantMap& e
     };
 
     VectorBuffer buffer;
-    buffer.WriteUByte(Chat::GLOBAL);
-    buffer.WriteString("--> " + username + " joined the server!");
-    GetSubsystem<Network>()->BroadcastMessage(MSG_CHATMESSAGE, true, false, buffer);
+    buffer.WriteUByte(Chat::RECEIVE_JOINED_USER);
+    buffer.WriteString(username);
+    GetSubsystem<Network>()->BroadcastMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
 }
 
 // ----------------------------------------------------------------------------
@@ -217,6 +216,32 @@ void ServerApplication::HandleNetworkMessage(StringHash eventType, VariantMap& e
             outBuffer.WriteUByte(messageTarget);
             outBuffer.WriteString(message);
             GetSubsystem<Network>()->BroadcastMessage(MSG_CHATMESSAGE, true, false, outBuffer);
+        }
+    }
+    else if (messageID == MSG_CONNECTEDUSERSLIST)
+    {
+        MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
+        Chat::NetworkMessageAction action = static_cast<Chat::NetworkMessageAction>(buffer.ReadUByte());
+        switch (action)
+        {
+            case Chat::REQUEST_CONNECTED_USERS:
+            {
+                URHO3D_LOGDEBUG("User list requested");
+
+                StringVector users;
+                for (ConnectedUsers::ConstIterator it = connectedUsers_.Begin(); it != connectedUsers_.End(); ++it)
+                    users.Push(it->second_.name_);
+                VectorBuffer buffer;
+                buffer.WriteUByte(Chat::RECEIVE_CONNECTED_USERS);
+                buffer.WriteStringVector(users);
+                connection->SendMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
+            } break;
+
+            case Chat::RECEIVE_CONNECTED_USERS:
+            case Chat::RECEIVE_JOINED_USER:
+            case Chat::RECEIVE_LEFT_USER:
+                URHO3D_LOGERROR("Unexpected client action in MSG_CONNECTEDUSERSLIST");
+                break;
         }
     }
 }

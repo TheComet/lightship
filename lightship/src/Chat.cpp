@@ -1,4 +1,5 @@
 #include "lightship/Chat.h"
+#include "lightship/ChatEvents.h"
 #include "lightship/Protocol.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Network/Network.h>
@@ -48,6 +49,7 @@ void Chat::Initialise()
     UpdateLayout();
 
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(Chat, HandleKeyDown));
+    SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(Chat, HandleServerConnected));
     SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(Chat, HandleNetworkMessage));
 }
 
@@ -64,6 +66,17 @@ unsigned char Chat::GetScope() const
 }
 
 // ----------------------------------------------------------------------------
+void Chat::AddChatMessage(const Urho3D::String& message)
+{
+    Text* text = new Text(context_);
+    text->SetStyleAuto();
+    text->SetText(message);
+    chatMessages_->AddItem(text);
+    chatMessages_->EnsureItemVisibility(text);
+    chatMessages_->UpdateLayout();
+}
+
+// ----------------------------------------------------------------------------
 String Chat::GetAndClearChatBoxMessageIfSelected()
 {
     if (chatBox_->HasFocus() == false)
@@ -72,6 +85,23 @@ String Chat::GetAndClearChatBoxMessageIfSelected()
     String msg = chatBox_->GetText();
     chatBox_->SetText("");
     return msg;
+}
+
+// ----------------------------------------------------------------------------
+void Chat::RequestConnectedUsersList() const
+{
+    VectorBuffer buffer;
+    Connection* serverConnection = GetSubsystem<Network>()->GetServerConnection();
+    if (serverConnection == NULL)
+        return;
+
+    serverConnection->SendMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
+}
+
+// ----------------------------------------------------------------------------
+void Chat::HandleServerConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+{
+    RequestConnectedUsersList();
 }
 
 // ----------------------------------------------------------------------------
@@ -90,12 +120,51 @@ void Chat::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
 
         if (messageType & GLOBAL)
         {
-            Text* text = new Text(context_);
-            text->SetStyleAuto();
-            text->SetText(message);
-            chatMessages_->AddItem(text);
-            chatMessages_->EnsureItemVisibility(text);
-            chatMessages_->UpdateLayout();
+            AddChatMessage(message);
+        }
+    }
+    else if (messageID == MSG_CONNECTEDUSERSLIST)
+    {
+        MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
+        NetworkMessageAction action = static_cast<NetworkMessageAction>(buffer.ReadUByte());
+        switch (action)
+        {
+            case REQUEST_CONNECTED_USERS:
+                URHO3D_LOGERRORF("Unexpected connected users request from server");
+                break;
+
+            case RECEIVE_CONNECTED_USERS:
+            {
+                connectedUsers_ = buffer.ReadStringVector();
+
+                VariantMap& eventData = GetEventDataMap();
+                eventData[ChatUserListChanged::P_USERLIST] = connectedUsers_;
+                SendEvent(E_CHATUSERLISTCHANGED, eventData);
+            }   break;
+
+            case RECEIVE_JOINED_USER:
+            {
+                String username = buffer.ReadString();
+                connectedUsers_.Push(username);
+
+                AddChatMessage("--> " + username + " joined the server!");
+
+                VariantMap& eventData = GetEventDataMap();
+                eventData[ChatUserJoined::P_USERNAME] = username;
+                SendEvent(E_CHATUSERJOINED, eventData);
+            }   break;
+
+            case RECEIVE_LEFT_USER:
+            {
+                String username = buffer.ReadString();
+                connectedUsers_.Remove(username);
+
+                AddChatMessage("<-- " + username + " left the server!");
+
+                VariantMap& eventData = GetEventDataMap();
+                eventData[ChatUserLeft::P_USERNAME] = username;
+                SendEvent(E_CHATUSERLEFT, eventData);
+            }   break;
         }
     }
 }

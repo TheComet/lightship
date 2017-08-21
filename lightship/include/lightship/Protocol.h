@@ -7,4 +7,4 @@ static const int MSG_MAPSTATE = 0x17;
 
 static const int MSG_CHATMESSAGE = 0x18;
 
-static const int MSG_CONNECTEDUSERS = 0x19;
+static const int MSG_CONNECTEDUSERSLIST = 0x19;

@@ -1,6 +1,7 @@
 #include "lightship-client/MainMenu.h"
 #include "lightship/API/ClientAPI.h"
 #include "lightship/Chat.h"
+#include "lightship/ChatEvents.h"
 #include "lightship/Protocol.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Core/StringUtils.h>
@@ -133,6 +134,9 @@ void MainMenu::Initialise()
 
 #undef CONNECT_BUTTON
 
+    SubscribeToEvent(E_CHATUSERLISTCHANGED, URHO3D_HANDLER(MainMenu, HandleChatUserListChanged));
+    SubscribeToEvent(E_CHATUSERJOINED, URHO3D_HANDLER(MainMenu, HandleChatUserJoined));
+    SubscribeToEvent(E_CHATUSERLEFT, URHO3D_HANDLER(MainMenu, HandleChatUserLeft));
     SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(MainMenu, HandleConnectFailed));
     SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerConnected));
     SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerDisonnected));
@@ -238,6 +242,77 @@ void MainMenu::ConnectionFailed_SetMessage(const String& msg)
     }
 
     textElement->SetText(msg);
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+{
+    using namespace ChatUserListChanged;
+
+    ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
+    if (userList == NULL)
+    {
+        URHO3D_LOGERROR("Failed to get ListView object \"ConnectedPlayers\" from UI");
+        return;
+    }
+
+    userList->RemoveAllItems();
+    userList->DisableLayoutUpdate();
+    StringVector* list = eventData[P_USERLIST].GetStringVectorPtr();
+    for (StringVector::ConstIterator it = list->Begin(); it != list->End(); ++it)
+    {
+        Text* text = new Text(context_);
+        text->SetStyleAuto();
+        text->SetText(*it);
+        userList->AddItem(text);
+    }
+    userList->EnableLayoutUpdate();
+    userList->UpdateLayout();
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::HandleChatUserJoined(StringHash eventType, VariantMap& eventData)
+{
+    using namespace ChatUserJoined;
+
+    ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
+    if (userList == NULL)
+    {
+        URHO3D_LOGERROR("Failed to get ListView object \"ConnectedPlayers\" from UI");
+        return;
+    }
+
+    Text* text = new Text(context_);
+    text->SetStyleAuto();
+    text->SetText(eventData[P_USERNAME].GetString());
+    userList->AddItem(text);
+    userList->UpdateLayout();
+}
+
+// ----------------------------------------------------------------------------
+void MainMenu::HandleChatUserLeft(StringHash eventType, VariantMap& eventData)
+{
+    using namespace ChatUserLeft;
+
+    ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
+    if (userList == NULL)
+    {
+        URHO3D_LOGERROR("Failed to get ListView object \"ConnectedPlayers\" from UI");
+        return;
+    }
+
+    String username = eventData[P_USERNAME].GetString();
+    PODVector<UIElement*> items = userList->GetItems();
+    for (PODVector<UIElement*>::Iterator it = items.Begin(); it != items.End(); ++it)
+    {
+        Text* textItem = static_cast<Text*>(*it);
+        if (textItem->GetText() == username)
+        {
+            userList->RemoveItem(textItem);
+            userList->UpdateLayout();
+            break;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------

@@ -20,21 +20,33 @@ public:
         IN_GAME = 0x04
     };
 
+    enum NetworkMessageAction
+    {
+        REQUEST_CONNECTED_USERS = 0,
+        RECEIVE_CONNECTED_USERS,
+        RECEIVE_JOINED_USER,
+        RECEIVE_LEFT_USER
+    };
+
     Chat(Urho3D::Context* context);
     static void RegisterObject(Urho3D::Context* context);
 
     void Initialise();
     void SetScope(unsigned char scope);
     unsigned char GetScope() const;
+    void AddChatMessage(const Urho3D::String& message);
 
     Urho3D::String GetAndClearChatBoxMessageIfSelected();
 
 private:
+    void RequestConnectedUsersList() const;
+    void HandleServerConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 
 private:
     Urho3D::ListView* chatMessages_;
     Urho3D::LineEdit* chatBox_;
+    Urho3D::StringVector connectedUsers_;
     unsigned char scope_;
 };

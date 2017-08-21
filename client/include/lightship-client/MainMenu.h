@@ -71,7 +71,9 @@ private:
 #undef X
 
     // other events of interest
-    void HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleChatUserJoined(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleChatUserLeft(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleConnectFailed(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleServerConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleServerDisonnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
