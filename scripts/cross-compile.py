@@ -2,6 +2,7 @@
 
 import sys
 import os
+import shutil
 import argparse
 import subprocess
 from TemplateProcessor import TemplateProcessor
@@ -24,6 +25,7 @@ class Target(object):
         parser.add_argument('--cmake', help='Additional options to pass to CMake. Note that "-D" is prepended automatically', type=str, action='append')
         parser.add_argument('--make', help='The command to use to "make" the target (Windows will use nmake, e.g.', type=str)
         parser.add_argument('--install', help='The command to use to install the target', type=str)
+        parser.add_argument('--fetch-urho3d-data', help='If true, the Urho3D "Data" folder is downloaded from dropbox', action='store_true')
         parser.add_argument('--compress', help='The compression to use.', type=str, choices=['bz2', 'gz',  'xz', '7z'])
         args = parser.parse_args()
    
@@ -81,6 +83,7 @@ class Target(object):
         self.additional_cmake_args    = args.cmake
         self.make_cmd                 = args.make
         self.install_cmd              = args.install
+        self.fetch_urho3d_data        = args.fetch_urho3d_data
         self.compress_type            = args.compress
         self.output_name              = args.output_name
         self.build_folder_name        = build_folder_name
@@ -158,6 +161,22 @@ class Target(object):
             process.wait()
             if not process.returncode == 0:
                 raise Exception('Install failed')
+        if self.fetch_urho3d_data:
+            zip_dir = os.path.abspath(os.path.join(self.binary_path, '../'))
+            zip_file = os.path.join(zip_dir, 'Data.zip')
+            unzip_dir = os.path.join(self.install_prefix, 'bin', 'Data')
+            if not os.path.exists(zip_file):
+                process = subprocess.Popen('wget -O Data.zip https://www.dropbox.com/sh/23w94wl9ngq7b5x/AABOj0FH3_wbahZP3V3yt-A5a?dl=0'.split(), cwd=zip_dir)
+                process.wait()
+                if not process.returncode == 0:
+                    raise Exception('Dropbox fetch failed')
+            if not os.path.exists(unzip_dir):
+                os.makedirs(unzip_dir)
+                process = subprocess.Popen('unzip {}'.format(zip_file).split(), cwd=unzip_dir)
+                process.wait()
+                if not process.returncode == 0:
+                    shutil.rmtree(unzip_dir)
+                    raise Exception('Unzip of Data failed')
 
     def compress(self):
         if self.compress_type is None:

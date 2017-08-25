@@ -27,7 +27,6 @@
     BUTTONS_CONNECTING               \
     BUTTONS_CONNECTIONFAILED
 
-class ClientAPI;
 class MenuScreen;
 
 class MainMenu : public Urho3D::UIElement
@@ -50,7 +49,6 @@ public:
     static void RegisterObject(Urho3D::Context* context);
 
     void Initialise();
-    void SetClient(ClientAPI* client);
 
     void SwitchToScreen(Screen screen);
     void PushScreen(Screen screen);
@@ -80,6 +78,5 @@ private:
 
     Urho3D::SharedPtr<Urho3D::UIElement> screens_[SCREEN_COUNT];
     Urho3D::PODVector<Screen> screenStack_;
-    ClientAPI* client_;
     Screen currentScreen_;
 };

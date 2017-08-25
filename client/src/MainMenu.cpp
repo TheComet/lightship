@@ -1,8 +1,8 @@
 #include "lightship-client/MainMenu.h"
-#include "lightship/API/ClientAPI.h"
-#include "lightship/Chat.h"
-#include "lightship/ChatEvents.h"
-#include "lightship/Protocol.h"
+#include "lightship-client/Chat.h"
+#include "lightship/Network/UserManagerEvents.h"
+#include "lightship/Network/ClientProtocol.h"
+#include "lightship/Network/UserManager.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Core/StringUtils.h>
 #include <Urho3D/IO/Log.h>
@@ -53,7 +53,6 @@ T* GetUIChild(const UIElement* element, const String& name)
 // ----------------------------------------------------------------------------
 MainMenu::MainMenu(Context* context) :
     UIElement(context),
-    client_(NULL),
     currentScreen_(SCREEN_MAINLOCAL)
 {
 }
@@ -103,7 +102,6 @@ void MainMenu::Initialise()
         chat->SetStyleAuto();
         chatLayout->AddChild(chat);
         chat->Initialise();
-        chat->SetScope(Chat::GLOBAL);
     }
 
     SwitchToScreen(currentScreen_);
@@ -134,18 +132,12 @@ void MainMenu::Initialise()
 
 #undef CONNECT_BUTTON
 
-    SubscribeToEvent(E_CHATUSERLISTCHANGED, URHO3D_HANDLER(MainMenu, HandleChatUserListChanged));
-    SubscribeToEvent(E_CHATUSERJOINED, URHO3D_HANDLER(MainMenu, HandleChatUserJoined));
-    SubscribeToEvent(E_CHATUSERLEFT, URHO3D_HANDLER(MainMenu, HandleChatUserLeft));
+    SubscribeToEvent(E_USERLISTCHANGED, URHO3D_HANDLER(MainMenu, HandleChatUserListChanged));
+    SubscribeToEvent(E_USERJOINED, URHO3D_HANDLER(MainMenu, HandleChatUserJoined));
+    SubscribeToEvent(E_USERLEFT, URHO3D_HANDLER(MainMenu, HandleChatUserLeft));
     SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(MainMenu, HandleConnectFailed));
     SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerConnected));
     SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerDisonnected));
-}
-
-// ----------------------------------------------------------------------------
-void MainMenu::SetClient(ClientAPI* client)
-{
-    client_ = client;
 }
 
 // ----------------------------------------------------------------------------
@@ -247,7 +239,7 @@ void MainMenu::ConnectionFailed_SetMessage(const String& msg)
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
 {
-    using namespace ChatUserListChanged;
+    using namespace UserListChanged;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
     if (userList == NULL)
@@ -273,7 +265,7 @@ void MainMenu::HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::V
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserJoined(StringHash eventType, VariantMap& eventData)
 {
-    using namespace ChatUserJoined;
+    using namespace UserJoined;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
     if (userList == NULL)
@@ -292,7 +284,7 @@ void MainMenu::HandleChatUserJoined(StringHash eventType, VariantMap& eventData)
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserLeft(StringHash eventType, VariantMap& eventData)
 {
-    using namespace ChatUserLeft;
+    using namespace UserLeft;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
     if (userList == NULL)
@@ -346,7 +338,7 @@ void MainMenu::Handle_BTN_MAINLOCAL_OPTIONS(StringHash eventType, VariantMap& ev
 }
 void MainMenu::Handle_BTN_MAINLOCAL_QUIT(StringHash eventType, VariantMap& eventData)
 {
-    client_->Quit();
+    GetSubsystem<ClientProtocol>()->Quit();
 }
 
 // ----------------------------------------------------------------------------
@@ -358,15 +350,15 @@ void MainMenu::Handle_BTN_MAINSERVER_JOINGAME(StringHash eventType, VariantMap& 
 }
 void MainMenu::Handle_BTN_MAINSERVER_DISCONNECT(StringHash eventType, VariantMap& eventData)
 {
-    client_->DisconnectFromServer();
+    GetSubsystem<ClientProtocol>()->DisconnectFromServer();
     SwitchToScreen(SCREEN_MAINLOCAL);
 }
 
 // ----------------------------------------------------------------------------
 void MainMenu::Handle_BTN_CONNECT_OK(StringHash eventType, VariantMap& eventData)
 {
-    client_->SetUsername(Connect_GetUsername());
-    if (client_->GetUsername().Empty())
+    String username = Connect_GetUsername();
+    if (username.Empty())
     {
         Connect_SetUsername("Please enter a username");
         return;
@@ -380,21 +372,21 @@ void MainMenu::Handle_BTN_CONNECT_OK(StringHash eventType, VariantMap& eventData
     msg.AppendWithFormat("Connecting to %s on port %d...", address.CString(), port);
     Connecting_SetMessage(msg);
 
-    if (client_->ConnectToServer(address, port) == true)
+    if (GetSubsystem<ClientProtocol>()->ConnectToServer(address, port) == true)
         SwitchToScreen(SCREEN_CONNECTING);
     else
         SwitchToScreen(SCREEN_CONNECTIONFAILED);
 }
 void MainMenu::Handle_BTN_CONNECT_CANCEL(StringHash eventType, VariantMap& eventData)
 {
-    client_->AbortConnectingToServer();
+    GetSubsystem<ClientProtocol>()->AbortConnectingToServer();
     SwitchToScreen(SCREEN_MAINLOCAL);
 }
 
 // ----------------------------------------------------------------------------
 void MainMenu::Handle_BTN_CONNECTING_CANCEL(StringHash eventType, VariantMap& eventData)
 {
-    client_->DisconnectFromServer();
+    GetSubsystem<ClientProtocol>()->DisconnectFromServer();
     SwitchToScreen(SCREEN_MAINLOCAL);
 }
 

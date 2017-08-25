@@ -1,9 +1,10 @@
-#include "lightship/Chat.h"
 #include "lightship/GameConfig.h"
 #include "lightship/Map.h"
 #include "lightship/MapState.h"
 #include "lightship/Player.h"
-#include "lightship/Protocol.h"
+#include "lightship/Network/Protocol.h"
+#include "lightship/Network/ChatProtocol.h"
+#include "lightship/Network/UserManager.h"
 #include "lightship-server/ServerApplication.h"
 #include "lightship-server/SignalHandler.h"
 #include <Urho3D/AngelScript/Script.h>
@@ -48,7 +49,7 @@ void LightshipServerApplication::Start()
 
     GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
 
-    GetSubsystem<Network>()->StartServer(1337);
+    GetSubsystem<Network>()->StartServer(2048);
     LoadMap("Maps/(10) Adam.xml");
 }
 
@@ -63,6 +64,8 @@ void LightshipServerApplication::RegisterStuff()
 {
     // Server only subsystems
     context_->RegisterSubsystem(new SignalHandler(context_));
+    context_->RegisterSubsystem(new UserManager(context_));
+    context_->RegisterSubsystem(new ChatProtocol(context_, NULL));
 
     // Client/Server subsystems
     context_->RegisterSubsystem(new Script(context_));
@@ -77,11 +80,6 @@ void LightshipServerApplication::RegisterStuff()
 // ----------------------------------------------------------------------------
 void LightshipServerApplication::SubscribeToEvents()
 {
-    SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(LightshipServerApplication, HandleConnectFailed));
-    SubscribeToEvent(E_CLIENTCONNECTED, URHO3D_HANDLER(LightshipServerApplication, HandleClientConnected));
-    SubscribeToEvent(E_CLIENTDISCONNECTED, URHO3D_HANDLER(LightshipServerApplication, HandleClientDisonnected));
-    SubscribeToEvent(E_CLIENTIDENTITY, URHO3D_HANDLER(LightshipServerApplication, HandleClientIdentity));
-    SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(LightshipServerApplication, HandleNetworkMessage));
     SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(LightshipServerApplication, HandleFileChanged));
     SubscribeToEvent(E_EXITREQUESTED, URHO3D_HANDLER(LightshipServerApplication, HandleExitRequested));
 }
@@ -118,133 +116,6 @@ void LightshipServerApplication::CreatePlayer()
     playerNode->SetPosition(Vector3(13, 0, 10));
 }
 
-// ----------------------------------------------------------------------------
-void LightshipServerApplication::HandleConnectFailed(StringHash eventType, VariantMap& eventData)
-{
-}
-
-// ----------------------------------------------------------------------------
-void LightshipServerApplication::HandleClientConnected(StringHash eventType, VariantMap& eventData)
-{
-    using namespace ClientConnected;
-
-    // Need to set the scene on incomming connections to enable scene replication
-    Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
-    connection->SetScene(scene_);
-}
-
-// ----------------------------------------------------------------------------
-void LightshipServerApplication::HandleClientDisonnected(StringHash eventType, VariantMap& eventData)
-{
-    using namespace ClientDisconnected;
-
-    Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
-    ConnectedUsers::Iterator it = connectedUsers_.Find(connection);
-    if (it == connectedUsers_.End())
-        return;
-
-    VectorBuffer buffer;
-    buffer.WriteUByte(Chat::RECEIVE_LEFT_USER);
-    buffer.WriteString(it->second_.name_);
-    GetSubsystem<Network>()->BroadcastMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
-
-    connectedUsers_.Erase(it);
-}
-
-// ----------------------------------------------------------------------------
-void LightshipServerApplication::HandleClientIdentity(StringHash eventType, VariantMap& eventData)
-{
-    using namespace ClientIdentity;
-
-    Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
-    const VariantMap& identity = connection->GetIdentity();
-    Variant* var = identity["Username"];
-    if (var == NULL)
-    {
-        URHO3D_LOGERROR("Client didn't provide username!");
-        connection->Disconnect();
-        return;
-    }
-
-    String username = var->GetString();
-    if (username.Empty())
-    {
-        URHO3D_LOGERROR("Client provided an empty username!");
-        connection->Disconnect();
-        return;
-    }
-
-    for (ConnectedUsers::ConstIterator it = connectedUsers_.Begin(); it != connectedUsers_.End(); ++it)
-    {
-        if (it->second_.name_ == username)
-        {
-            eventData[P_ALLOW] = false;
-            return;
-        }
-    }
-
-    connectedUsers_[connection] = {
-        username
-    };
-
-    VectorBuffer buffer;
-    buffer.WriteUByte(Chat::RECEIVE_JOINED_USER);
-    buffer.WriteString(username);
-    GetSubsystem<Network>()->BroadcastMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
-}
-
-// ----------------------------------------------------------------------------
-void LightshipServerApplication::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
-{
-    using namespace NetworkMessage;
-    int messageID = eventData[P_MESSAGEID].GetInt();
-    Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
-
-    if (messageID == MSG_CHATMESSAGE)
-    {
-        MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
-        unsigned char messageTarget = buffer.ReadUByte();
-        String message = buffer.ReadString();
-        URHO3D_LOGDEBUGF("Received message \"%s\"", message.CString());
-
-        // Append username to it, then broadcast
-        message = "<" + connectedUsers_[connection].name_ + "> " + message;
-
-        if (messageTarget & Chat::GLOBAL)
-        {
-            VectorBuffer outBuffer;
-            outBuffer.WriteUByte(messageTarget);
-            outBuffer.WriteString(message);
-            GetSubsystem<Network>()->BroadcastMessage(MSG_CHATMESSAGE, true, false, outBuffer);
-        }
-    }
-    else if (messageID == MSG_CONNECTEDUSERSLIST)
-    {
-        MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
-        Chat::NetworkMessageAction action = static_cast<Chat::NetworkMessageAction>(buffer.ReadUByte());
-        switch (action)
-        {
-            case Chat::REQUEST_CONNECTED_USERS:
-            {
-                URHO3D_LOGDEBUG("User list requested");
-
-                StringVector users;
-                for (ConnectedUsers::ConstIterator it = connectedUsers_.Begin(); it != connectedUsers_.End(); ++it)
-                    users.Push(it->second_.name_);
-                VectorBuffer buffer;
-                buffer.WriteUByte(Chat::RECEIVE_CONNECTED_USERS);
-                buffer.WriteStringVector(users);
-                connection->SendMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
-            } break;
-
-            case Chat::RECEIVE_CONNECTED_USERS:
-            case Chat::RECEIVE_JOINED_USER:
-            case Chat::RECEIVE_LEFT_USER:
-                URHO3D_LOGERROR("Unexpected client action in MSG_CONNECTEDUSERSLIST");
-                break;
-        }
-    }
-}
 
 // ----------------------------------------------------------------------------
 void LightshipServerApplication::HandleFileChanged(StringHash eventType, VariantMap& eventData)

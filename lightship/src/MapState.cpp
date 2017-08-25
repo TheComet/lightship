@@ -1,5 +1,5 @@
 #include "lightship/MapState.h"
-#include "lightship/Protocol.h"
+#include "lightship/Network/Protocol.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Graphics/Model.h>
 #include <Urho3D/Graphics/Material.h>

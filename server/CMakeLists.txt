@@ -17,3 +17,4 @@ file (GLOB SOURCE_FILES
     "${PLATFORM_SOURCE_DIR}/*.c")
 
 setup_main_executable ()
+set_output_directories (${CMAKE_BINARY_DIR}/bin LOCAL RUNTIME PDB)

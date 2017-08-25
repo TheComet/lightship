@@ -24,6 +24,8 @@ configure_file (include/lightship/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/includ
 add_definitions (-DLIGHTSHIP_BUILDING)
 
 define_source_files (
-    GLOB_CPP_PATTERNS src/*.cpp
+    GLOB_CPP_PATTERNS src/*.cpp src/Network/*.cpp
     GLOB_H_PATTERNS include/lightship/*.h)
 setup_library (SHARED)
+
+install (TARGETS lightship DESTINATION "lib")

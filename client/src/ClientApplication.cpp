@@ -1,9 +1,9 @@
 #include "lightship-client/ClientApplication.h"
 #include "lightship-client/MainMenu.h"
-#include "lightship/Chat.h"
+#include "lightship-client/Chat.h"
+#include "lightship/Network/ClientProtocol.h"
 #include "lightship/DebugTextScroll.h"
 #include "lightship/GameConfig.h"
-#include "lightship/Protocol.h"
 #include "lightship/Map.h"
 #include "lightship/MapState.h"
 #include "lightship/Player.h"
@@ -66,7 +66,6 @@ void ClientApplication::Start()
     ui->GetRoot()->SetDefaultStyle(cache->GetResource<XMLFile>("UI/DefaultStyle.xml"));
 
     MainMenu* menu = new MainMenu(context_);
-    menu->SetClient(this);
     menu->SetStyleAuto();
     ui->GetRoot()->AddChild(menu);
     menu->Initialise();
@@ -78,7 +77,7 @@ void ClientApplication::Start()
 // ----------------------------------------------------------------------------
 void ClientApplication::Stop()
 {
-    DisconnectFromServer();
+    GetSubsystem<ClientProtocol>()->DisconnectFromServer();
     GetSubsystem<UI>()->GetRoot()->RemoveAllChildren();
 }
 
@@ -125,148 +124,6 @@ void ClientApplication::CreateDebugHud()
 }
 
 // ----------------------------------------------------------------------------
-bool ClientApplication::ConnectToServer(const String& address, unsigned int port)
-{
-    scene_ = new Scene(context_);
-
-    scene_->CreateComponent<Octree>(LOCAL);
-    MapState* mapState = scene_->CreateComponent<MapState>(LOCAL);
-    Map* map = scene_->CreateComponent<Map>(LOCAL);
-    map->SetState(mapState);
-
-    VariantMap identity;
-    identity["Username"] = username_;
-    if (GetSubsystem<Network>()->Connect(address, port, scene_, identity) == false)
-    {
-        scene_ = NULL;
-        return false;
-    }
-
-    return true;
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::AbortConnectingToServer()
-{
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::DisconnectFromServer()
-{
-    Network* network = GetSubsystem<Network>();
-    if (network->GetServerConnection() == NULL)
-        return;
-
-    network->Disconnect();
-    scene_ = NULL;
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::Quit()
-{
-    engine_->Exit();
-}
-
-// ----------------------------------------------------------------------------
-String ClientApplication::GetUsername() const
-{
-    return username_;
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::SetUsername(const String& username)
-{
-    username_ = username;
-}
-
-// ----------------------------------------------------------------------------
-unsigned int ClientApplication::GetGlobalID() const
-{
-    return guid_;
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::SetGlobalID(unsigned int ID)
-{
-    guid_ = ID;
-}
-
-// ----------------------------------------------------------------------------
-char ClientApplication::GetLocalID() const
-{
-    return luid_;
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::SetLocalID(char ID)
-{
-    luid_ = ID;
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::CreateGame(const String& gameName)
-{
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::JoinGame(unsigned int gameID)
-{
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::LeaveGame()
-{
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::SendGlobalChatMessage(const String& message)
-{
-    Connection* connection = GetSubsystem<Network>()->GetServerConnection();
-    if (connection == NULL)
-    {
-        URHO3D_LOGERROR("Attempted to send a chat message, but there is no connection to the server!");
-        return;
-    }
-
-    VectorBuffer buffer;
-    buffer.WriteUByte(0x01); // global chat message
-    buffer.WriteString(message);
-    connection->SendMessage(MSG_CHATMESSAGE, true, false, buffer);
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::SendLobbyChatMessage(const String& message)
-{
-    Connection* connection = GetSubsystem<Network>()->GetServerConnection();
-    if (connection == NULL)
-    {
-        URHO3D_LOGERROR("Attempted to send a chat message, but there is no connection to the server!");
-        return;
-    }
-
-    VectorBuffer buffer;
-    buffer.WriteUByte(0x02); // lobby chat message
-    buffer.WriteString(message);
-    connection->SendMessage(MSG_CHATMESSAGE, true, false, buffer);
-}
-
-// ----------------------------------------------------------------------------
-void ClientApplication::SendInGameChatMessage(const String& message)
-{
-    Connection* connection = GetSubsystem<Network>()->GetServerConnection();
-    if (connection == NULL)
-    {
-        URHO3D_LOGERROR("Attempted to send a chat message, but there is no connection to the server!");
-        return;
-    }
-
-    VectorBuffer buffer;
-    buffer.WriteUByte(0x04); // in-game chat message
-    buffer.WriteString(message);
-    connection->SendMessage(MSG_CHATMESSAGE, true, false, buffer);
-}
-
-// ----------------------------------------------------------------------------
 void ClientApplication::CreateCamera()
 {
     Renderer* renderer = GetSubsystem<Renderer>();
@@ -304,7 +161,7 @@ void ClientApplication::HandleKeyDown(StringHash eventType, VariantMap& eventDat
 
     if(key == KEY_ESCAPE)
     {
-        Quit();
+        engine_->Exit();
     }
 
     // Toggle debug geometry

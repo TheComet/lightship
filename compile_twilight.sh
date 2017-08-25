@@ -7,4 +7,5 @@
     --cmake="CMAKE_BUILD_TYPE=Release" \
     --make="make -j7" \
     --install="make install" \
+    --fetch-urho3d-data \
     --compress=xz

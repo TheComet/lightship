@@ -36,8 +36,10 @@ include (UrhoCommon)
 find_package (Urho3D REQUIRED)
 include_directories(${URHO3D_INCLUDE_DIRS})
 
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-set (CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+#set (DEST_RUNTIME_DIR ${CMAKE_BINARY_DIR}/bin)
+set (RESOURCE_DIRS
+    "${CMAKE_SOURCE_DIR}/bin/CoreData"
+    "${CMAKE_SOURCE_DIR}/bin/Data")
 
 add_subdirectory ("lightship")
 add_subdirectory ("server")
