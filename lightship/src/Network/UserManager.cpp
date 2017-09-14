@@ -1,4 +1,5 @@
 #include "lightship/Network/UserManager.h"
+#include "lightship/Network/UserManagerEvents.h"
 #include <Urho3D/IO/MemoryBuffer.h>
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/Network/Network.h>
@@ -74,10 +75,9 @@ void UserManager::HandleClientIdentity(StringHash eventType, VariantMap& eventDa
 
     SetUsername(connection, username);
 
-    VectorBuffer buffer;
-    buffer.WriteUByte(Chat::RECEIVE_JOINED_USER);
-    buffer.WriteString(username);
-    GetSubsystem<Network>()->BroadcastMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
+    VariantMap& data = GetEventDataMap();
+    data[UserJoined::P_USERNAME] = username;
+    SendEvent(E_USERJOINED, data);
 }
 
 // ----------------------------------------------------------------------------
@@ -90,10 +90,9 @@ void UserManager::HandleClientDisconnected(StringHash eventType, VariantMap& eve
     if (it == onlineUsers_.End())
         return;
 
-    VectorBuffer buffer;
-    buffer.WriteUByte(Chat::RECEIVE_LEFT_USER);
-    buffer.WriteString(it->second_.name_);
-    GetSubsystem<Network>()->BroadcastMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
+    VariantMap& data = GetEventDataMap();
+    data[UserLeft::P_USERNAME] = it->second_.name_;
+    SendEvent(E_USERJOINED, data);
 
     offlineUsers_.Push(it->second_);
     onlineUsers_.Erase(it);
@@ -101,11 +100,11 @@ void UserManager::HandleClientDisconnected(StringHash eventType, VariantMap& eve
 
 // ----------------------------------------------------------------------------
 void UserManager::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
-{
+{/*
     using namespace NetworkMessage;
     int messageID = eventData[P_MESSAGEID].GetInt();
 
-    if (messageID != MSG_CONNECTEDUSERSLIST)
+    if (messageID != MSG_USERMANAGER)
         return;
 
     MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
@@ -124,13 +123,13 @@ void UserManager::HandleNetworkMessage(StringHash eventType, VariantMap& eventDa
             buffer.WriteStringVector(users);
 
             Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
-            connection->SendMessage(MSG_CONNECTEDUSERSLIST, true, false, buffer);
+            connection->SendMessage(MSG_USERMANAGER, true, false, buffer);
         } break;
 
         case Chat::RECEIVE_CONNECTED_USERS:
         case Chat::RECEIVE_JOINED_USER:
         case Chat::RECEIVE_LEFT_USER:
-            URHO3D_LOGERROR("Unexpected client action in MSG_CONNECTEDUSERSLIST");
+            URHO3D_LOGERROR("Unexpected client action in MSG_USERMANAGER");
             break;
-    }
+    }*/
 }

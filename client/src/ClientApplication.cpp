@@ -1,6 +1,5 @@
 #include "lightship-client/ClientApplication.h"
 #include "lightship-client/MainMenu.h"
-#include "lightship-client/Chat.h"
 #include "lightship/Network/ClientProtocol.h"
 #include "lightship/DebugTextScroll.h"
 #include "lightship/GameConfig.h"
@@ -98,7 +97,6 @@ void ClientApplication::RegisterStuff()
     context_->RegisterSubsystem(new GameConfig(context_));
 
     // Client/Server components
-    Chat::RegisterObject(context_);
     Map::RegisterObject(context_);
     MapState::RegisterObject(context_);
     Player::RegisterObject(context_);

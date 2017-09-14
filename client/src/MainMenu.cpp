@@ -1,5 +1,6 @@
 #include "lightship-client/MainMenu.h"
-#include "lightship-client/Chat.h"
+#include "lightship/ChatView.h"
+#include "lightship/ChatClientProtocol.h"
 #include "lightship/Network/UserManagerEvents.h"
 #include "lightship/Network/ClientProtocol.h"
 #include "lightship/Network/UserManager.h"
@@ -98,10 +99,11 @@ void MainMenu::Initialise()
             URHO3D_LOGERROR("Failed to get UIElement object \"ChatMessages\" from UI");
             return;
         }
-        Chat* chat = new Chat(context_);
+        ChatView* chat = new ChatView(context_);
         chat->SetStyleAuto();
         chatLayout->AddChild(chat);
         chat->Initialise();
+        chat->SetModel(new ChatClientProtocol(context_, ChatModel::GLOBAL));
     }
 
     SwitchToScreen(currentScreen_);
@@ -338,7 +340,6 @@ void MainMenu::Handle_BTN_MAINLOCAL_OPTIONS(StringHash eventType, VariantMap& ev
 }
 void MainMenu::Handle_BTN_MAINLOCAL_QUIT(StringHash eventType, VariantMap& eventData)
 {
-    GetSubsystem<ClientProtocol>()->Quit();
 }
 
 // ----------------------------------------------------------------------------
@@ -372,7 +373,7 @@ void MainMenu::Handle_BTN_CONNECT_OK(StringHash eventType, VariantMap& eventData
     msg.AppendWithFormat("Connecting to %s on port %d...", address.CString(), port);
     Connecting_SetMessage(msg);
 
-    if (GetSubsystem<ClientProtocol>()->ConnectToServer(address, port) == true)
+    if (GetSubsystem<ClientProtocol>()->ConnectToServer(username, address, port) == true)
         SwitchToScreen(SCREEN_CONNECTING);
     else
         SwitchToScreen(SCREEN_CONNECTIONFAILED);

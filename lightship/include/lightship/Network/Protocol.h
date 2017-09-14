@@ -5,6 +5,11 @@
  */
 static const int MSG_MAPSTATE = 0x17;
 
-static const int MSG_CHATMESSAGE = 0x18;
+enum ChatNetwork
+{
+    CHAT_REQUEST_CONNECTED_USERS_LIST,
+    CHAT_SEND_MESSAGE
+};
+static const int MSG_CHAT = 0x18;
 
-static const int MSG_CONNECTEDUSERSLIST = 0x19;
+static const int MSG_USERMANAGER = 0x19;

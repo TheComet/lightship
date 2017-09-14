@@ -3,7 +3,6 @@
 #include "lightship/MapState.h"
 #include "lightship/Player.h"
 #include "lightship/Network/Protocol.h"
-#include "lightship/Network/ChatProtocol.h"
 #include "lightship/Network/UserManager.h"
 #include "lightship-server/ServerApplication.h"
 #include "lightship-server/SignalHandler.h"
@@ -65,7 +64,6 @@ void LightshipServerApplication::RegisterStuff()
     // Server only subsystems
     context_->RegisterSubsystem(new SignalHandler(context_));
     context_->RegisterSubsystem(new UserManager(context_));
-    context_->RegisterSubsystem(new ChatProtocol(context_, NULL));
 
     // Client/Server subsystems
     context_->RegisterSubsystem(new Script(context_));
