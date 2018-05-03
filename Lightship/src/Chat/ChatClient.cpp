@@ -1,5 +1,6 @@
 #include "Lightship/Chat/ChatClient.h"
 #include "Lightship/Network/Protocol.h"
+#include <Urho3D/Core/Context.h>
 #include <Urho3D/Input/InputEvents.h>
 #include <Urho3D/IO/VectorBuffer.h>
 #include <Urho3D/IO/MemoryBuffer.h>
@@ -20,6 +21,12 @@ ChatClient::ChatClient(Context* context) :
     SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(ChatClient, HandleServerConnected));
     SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(ChatClient, HandleServerDisconnected));
     SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(ChatClient, HandleNetworkMessage));
+}
+
+// ----------------------------------------------------------------------------
+void ChatClient::RegisterObject(Urho3D::Context* context)
+{
+    context->RegisterFactory<ChatClient>("Lightship");
 }
 
 // ----------------------------------------------------------------------------

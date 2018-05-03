@@ -15,6 +15,7 @@ class ChatClient : public Chat,
     URHO3D_OBJECT(ChatClient, Urho3D::UIElement)
 public:
     ChatClient(Urho3D::Context* context);
+    static void RegisterObject(Urho3D::Context* context);
 
     /// Needs to be called after adding the chat view to the UI hierarchy
     void Initialise();

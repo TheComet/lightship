@@ -64,7 +64,7 @@ void LightshipServerApplication::Stop()
 void LightshipServerApplication::RegisterStuff()
 {
     // Server only subsystems
-    context_->RegisterSubsystem(new SignalHandler(context_));
+    context_->RegisterSubsystem<SignalHandler>();
     /*context_->RegisterSubsystem(new UserManager(context_));
 
     // Client/Server subsystems

@@ -69,9 +69,8 @@ void ClientApplication::Start()
     menu->SetStyleAuto();
     ui->GetRoot()->AddChild(menu);
     menu->Initialise();*/
-    ChatClient* chat = new ChatClient(context_);
+    ChatClient* chat = ui->GetRoot()->CreateChild<ChatClient>();
     chat->SetStyleAuto();
-    ui->GetRoot()->AddChild(chat);
     chat->Initialise();
     chat->SetSize(400, 400);
 
@@ -80,6 +79,7 @@ void ClientApplication::Start()
 
     GetSubsystem<Input>()->SetMouseVisible(true);
     GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
+
     GetSubsystem<Network>()->Connect("127.0.0.1", 2048, scene_);
 }
 
@@ -92,7 +92,7 @@ void ClientApplication::Stop()
 
 // ----------------------------------------------------------------------------
 void ClientApplication::RegisterStuff()
-{/*
+{
     // Client only subsystems
 #ifdef DEBUG
     context_->RegisterSubsystem(new DebugTextScroll(context_));
@@ -103,13 +103,13 @@ void ClientApplication::RegisterStuff()
     MainMenu::RegisterObject(context_);
 
     // Client/Server subsystems
-    context_->RegisterSubsystem(new Script(context_));
-    context_->RegisterSubsystem(new GameConfig(context_));
+    context_->RegisterSubsystem<GameConfig>();
 
     // Client/Server components
+    ChatClient::RegisterObject(context_);
     Map::RegisterObject(context_);
     MapState::RegisterObject(context_);
-    Player::RegisterObject(context_);*/
+    Player::RegisterObject(context_);
 }
 
 // ----------------------------------------------------------------------------
