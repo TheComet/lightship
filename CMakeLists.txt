@@ -41,7 +41,7 @@ set (RESOURCE_DIRS
     "${CMAKE_SOURCE_DIR}/bin/CoreData"
     "${CMAKE_SOURCE_DIR}/bin/Data")
 
-add_subdirectory ("lightship")
-add_subdirectory ("server")
-add_subdirectory ("client")
-add_subdirectory ("mapconverter")
+add_subdirectory ("Lightship")
+add_subdirectory ("Server")
+add_subdirectory ("Client")
+add_subdirectory ("MapConverter")
