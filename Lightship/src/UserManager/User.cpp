@@ -1,33 +1,65 @@
 #include "Lightship/UserManager/User.h"
+#include <Urho3D/IO/Serializer.h>
+#include <Urho3D/IO/Deserializer.h>
+#include <Urho3D/IO/Log.h>
 
 using namespace Urho3D;
 
 // ----------------------------------------------------------------------------
-User::User() :
-    charCode_(0)
+User::User(Urho3D::Context* context, const String& username, int uid) :
+    Serializable(context),
+    username_(username),
+    connection_(nullptr),
+    uid_(uid)
 {
 }
 
 // ----------------------------------------------------------------------------
-void User::SetName(const int& name)
+const String& User::GetUsername() const
 {
-    name_ = name;
+    return username_;
 }
 
 // ----------------------------------------------------------------------------
-String User::GetName() const
+int User::GetUID() const
 {
-    return name_;
+    return uid_;
 }
 
 // ----------------------------------------------------------------------------
-void User::SetCharacterCode(int code)
+void User::SetConnection(Connection* connection)
 {
-    charCode_ = code;
+    connection_ = connection;
 }
 
 // ----------------------------------------------------------------------------
-int User::GetCharacterCode() const
+Connection * User::GetConnection() const
 {
-    return charCode_;
+    return connection_;
+}
+
+// ----------------------------------------------------------------------------
+bool User::Load(Deserializer& source)
+{
+    username_ = source.ReadString();
+    uid_ = source.ReadInt();
+
+    return Serializable::Load(source);
+}
+
+// ----------------------------------------------------------------------------
+bool User::Save(Serializer& dest) const
+{
+    if (dest.WriteString(username_) == false)
+    {
+        URHO3D_LOGERROR("Could not save username, writing to stream failed");
+        return false;
+    }
+    if (dest.WriteInt(uid_) == false)
+    {
+        URHO3D_LOGERROR("Could not save UID, writing to stream failed");
+        return false;
+    }
+
+    return Serializable::Save(dest);
 }

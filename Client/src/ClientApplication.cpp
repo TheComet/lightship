@@ -8,6 +8,7 @@
 #include "Lightship/MapState.h"
 #include "Lightship/Player.h"
 #include "Lightship/TrackingCamera.h"
+#include "Lightship/UserManager/ClientUserManager.h"
 #include <Urho3D/AngelScript/Script.h>
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Engine/DebugHud.h>
@@ -80,7 +81,9 @@ void ClientApplication::Start()
     GetSubsystem<Input>()->SetMouseVisible(true);
     GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
 
-    GetSubsystem<Network>()->Connect("127.0.0.1", 2048, scene_);
+    VariantMap connectionData;
+    connectionData["Username"] = "TheComet";
+    GetSubsystem<Network>()->Connect("127.0.0.1", 2048, scene_, connectionData);
 }
 
 // ----------------------------------------------------------------------------
@@ -103,6 +106,7 @@ void ClientApplication::RegisterStuff()
     MainMenu::RegisterObject(context_);
 
     // Client/Server subsystems
+    context_->RegisterSubsystem<ClientUserManager>();
     context_->RegisterSubsystem<GameConfig>();
 
     // Client/Server components

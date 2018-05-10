@@ -578,7 +578,7 @@ void MapState::RequestMapState()
     URHO3D_LOGDEBUG("Requesting map state...");
     VectorBuffer buffer;
     buffer.WriteUByte(REQUEST_STATE);
-    connection->SendMessage(MSG_MAPSTATE, true, false, buffer);
+    connection->SendMessage(MSG_MAP_STATE, true, false, buffer);
 }
 
 // ----------------------------------------------------------------------------
@@ -587,7 +587,7 @@ void MapState::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
     using namespace NetworkMessage;
     int messageID = eventData[P_MESSAGEID].GetInt();
 
-    if (messageID != MSG_MAPSTATE)
+    if (messageID != MSG_MAP_STATE)
         return;
 
     MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
@@ -602,7 +602,7 @@ void MapState::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
             Save(stateBuffer);
 
             Connection* connection = static_cast<Connection*>(eventData[P_CONNECTION].GetPtr());
-            connection->SendMessage(MSG_MAPSTATE, true, true, stateBuffer);
+            connection->SendMessage(MSG_MAP_STATE, true, true, stateBuffer);
         } break;
 
         case RECEIVE_STATE:

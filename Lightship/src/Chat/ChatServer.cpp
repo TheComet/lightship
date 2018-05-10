@@ -1,5 +1,7 @@
 #include "Lightship/Chat/ChatServer.h"
 #include "Lightship/Network/Protocol.h"
+#include "Lightship/UserManager/UserManager.h"
+#include "Lightship/UserManager/User.h"
 #include <Urho3D/Network/Network.h>
 #include <Urho3D/Network/NetworkEvents.h>
 #include <Urho3D/IO/VectorBuffer.h>
@@ -26,16 +28,13 @@ Urho3D::StringVector ChatServer::GetMessages() const
     if (messages_.Size() == 0)
         return result;
     int iter = insertIndex_;  // This is where the next message would be inserted, i.e. the oldest message
-    if (iter > messages_.Size() - 1)
-        iter = 0;
-
     do
     {
-        result.Push(messages_[iter]);
-        if (++iter > messages_.Size() - 1)
+        if (iter > messages_.Size() - 1)
             iter = 0;
+        result.Push(messages_[iter]);
     }
-    while (iter != insertIndex_);
+    while (++iter != insertIndex_);
 
     return result;
 }
@@ -94,12 +93,13 @@ void ChatServer::HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::Vari
     {
         MemoryBuffer recBuf(eventData[P_DATA].GetBuffer());
         String chatMessage = recBuf.ReadString();
+
+        // Append username to it
+        User* user = GetSubsystem<UserManager>()->GetUserByConnection(connection);
+        chatMessage = "<" + user->GetUsername() + "> " + chatMessage;
+
         URHO3D_LOGDEBUGF("Received message: %s", chatMessage.CString());
         AddMessage(chatMessage, Color::WHITE);
-
-        // Append username to it, then broadcast
-        //String username = GetSubsystem<UserManager>()->GetUsername(connection);
-        //message = "<" + username + "> " + message;
 
         VectorBuffer sendBuf;
         sendBuf.WriteString(chatMessage);

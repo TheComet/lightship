@@ -30,6 +30,9 @@ private:
 
     void HandleFileChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleExitRequested(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleClientConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleClientDisconnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleClientIdentity(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 
     Urho3D::SharedPtr<MapState> map_;
     Urho3D::SharedPtr<Urho3D::Scene> scene_;

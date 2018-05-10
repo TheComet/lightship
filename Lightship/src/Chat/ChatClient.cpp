@@ -50,7 +50,6 @@ void ChatClient::Initialise()
 // ----------------------------------------------------------------------------
 void ChatClient::SetConnected()
 {
-    AddMessage(">>> Connected", Color::RED);
     inputBox_->SetEnabled(true);
 }
 
@@ -151,23 +150,29 @@ void ChatClient::HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::Vari
     using namespace NetworkMessage;
 
     int messageID = eventData[P_MESSAGEID].GetInt();
-    if (messageID == MSG_CHAT_MESSAGE)
+    switch (messageID)
     {
-        MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
-        String chatMessage = buffer.ReadString();
-
-        AddMessage(chatMessage, Color::WHITE);
-    }
-
-    if (messageID == MSG_CHAT_REQUEST_HISTORY)
-    {
-        MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
-        int messageCount = buffer.ReadInt();
-        URHO3D_LOGDEBUGF("Message history has %d messages.", messageCount);
-        for (unsigned i = 0; i < messageCount; ++i)
+        case MSG_CHAT_MESSAGE:
         {
+            MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
             String chatMessage = buffer.ReadString();
+
             AddMessage(chatMessage, Color::WHITE);
-        }
+        } break;
+
+        case MSG_CHAT_REQUEST_HISTORY:
+        {
+            MemoryBuffer buffer(eventData[P_DATA].GetBuffer());
+            int messageCount = buffer.ReadInt();
+            URHO3D_LOGDEBUGF("Message history has %d messages.", messageCount);
+            for (unsigned i = 0; i < messageCount; ++i)
+            {
+                String chatMessage = buffer.ReadString();
+                AddMessage(chatMessage, Color::WHITE);
+            }
+        } break;
+
+        default:
+            break;
     }
 }

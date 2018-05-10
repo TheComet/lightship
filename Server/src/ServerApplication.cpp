@@ -4,6 +4,7 @@
 #include "Lightship/Player.h"
 #include "Lightship/Chat/ChatServer.h"
 #include "Lightship/Network/Protocol.h"
+#include "Lightship/UserManager/ServerUserManager.h"
 #include "LightshipServer/ServerApplication.h"
 #include "LightshipServer/SignalHandler.h"
 #include <Urho3D/AngelScript/Script.h>
@@ -49,8 +50,6 @@ void LightshipServerApplication::Start()
     GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
     GetSubsystem<Network>()->StartServer(2048);
 
-    context_->RegisterSubsystem(new ChatServer(context_));
-
     LoadMap("Maps/(10) Adam.xml");
 }
 
@@ -65,8 +64,9 @@ void LightshipServerApplication::RegisterStuff()
 {
     // Server only subsystems
     context_->RegisterSubsystem<SignalHandler>();
-    /*context_->RegisterSubsystem(new UserManager(context_));
-
+    context_->RegisterSubsystem<ChatServer>();
+    context_->RegisterSubsystem<ServerUserManager>();
+/*
     // Client/Server subsystems
     context_->RegisterSubsystem(new Script(context_));
     context_->RegisterSubsystem(new GameConfig(context_));
@@ -115,7 +115,6 @@ void LightshipServerApplication::CreatePlayer()
     playerNode->CreateComponent<Player>();
     playerNode->SetPosition(Vector3(13, 0, 10));*/
 }
-
 
 // ----------------------------------------------------------------------------
 void LightshipServerApplication::HandleFileChanged(StringHash eventType, VariantMap& eventData)

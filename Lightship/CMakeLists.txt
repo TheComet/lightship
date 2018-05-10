@@ -28,6 +28,7 @@ define_source_files (
         src/*.cpp
         src/Chat/*.cpp
         src/Network/*.cpp
+        src/UserManager/*.cpp
     GLOB_H_PATTERNS
         include/Lightship/*.h
         include/Lightship/Chat/*.h
