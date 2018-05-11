@@ -1,10 +1,13 @@
 #include "LightshipClient/MainMenu.h"
-#include "Lightship/Network/ClientProtocol.h"
+#include "Lightship/Chat/ChatClient.h"
+#include "Lightship/Chat/Events.h"
+#include "Lightship/UserManager/Events.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Core/StringUtils.h>
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/IO/MemoryBuffer.h>
 #include <Urho3D/Input/InputEvents.h>
+#include <Urho3D/Network/Network.h>
 #include <Urho3D/Network/NetworkEvents.h>
 #include <Urho3D/Resource/ResourceCache.h>
 #include <Urho3D/UI/UI.h>
@@ -12,6 +15,9 @@
 #include <Urho3D/UI/LineEdit.h>
 #include <Urho3D/UI/ListView.h>
 #include <Urho3D/UI/Text.h>
+
+#include <Urho3D/Scene/Scene.h>
+#include <Urho3D/Graphics/Octree.h>
 
 using namespace Urho3D;
 
@@ -62,7 +68,7 @@ void MainMenu::RegisterObject(Context* context)
 
 // ----------------------------------------------------------------------------
 void MainMenu::Initialise()
-{/*
+{
     UIElement* root = GetSubsystem<UI>()->GetRoot();
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     XMLFile* xmlDefaultStyle = cache->GetResource<XMLFile>("UI/DefaultStyle.xml");
@@ -95,11 +101,9 @@ void MainMenu::Initialise()
             URHO3D_LOGERROR("Failed to get UIElement object \"ChatMessages\" from UI");
             return;
         }
-        ChatView* chat = new ChatView(context_);
-        chat->SetStyleAuto();
-        chatLayout->AddChild(chat);
+        //chat->SetStyleAuto();
+        ChatClient* chat = chatLayout->CreateChild<ChatClient>();
         chat->Initialise();
-        chat->SetModel(new ChatClientProtocol(context_, ChatModel::GLOBAL));
     }
 
     SwitchToScreen(currentScreen_);
@@ -131,11 +135,11 @@ void MainMenu::Initialise()
 #undef CONNECT_BUTTON
 
     SubscribeToEvent(E_USERLISTCHANGED, URHO3D_HANDLER(MainMenu, HandleChatUserListChanged));
-    SubscribeToEvent(E_USERJOINED, URHO3D_HANDLER(MainMenu, HandleChatUserJoined));
+    SubscribeToEvent(E_USERLEFT, URHO3D_HANDLER(MainMenu, HandleChatUserJoined));
     SubscribeToEvent(E_USERLEFT, URHO3D_HANDLER(MainMenu, HandleChatUserLeft));
     SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(MainMenu, HandleConnectFailed));
     SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerConnected));
-    SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerDisonnected));*/
+    SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerDisonnected));
 }
 
 // ----------------------------------------------------------------------------
@@ -236,7 +240,7 @@ void MainMenu::ConnectionFailed_SetMessage(const String& msg)
 
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{/*
+{
     using namespace UserListChanged;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
@@ -257,12 +261,12 @@ void MainMenu::HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::V
         userList->AddItem(text);
     }
     userList->EnableLayoutUpdate();
-    userList->UpdateLayout();*/
+    userList->UpdateLayout();
 }
 
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserJoined(StringHash eventType, VariantMap& eventData)
-{/*
+{
     using namespace UserJoined;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
@@ -276,12 +280,12 @@ void MainMenu::HandleChatUserJoined(StringHash eventType, VariantMap& eventData)
     text->SetStyleAuto();
     text->SetText(eventData[P_USERNAME].GetString());
     userList->AddItem(text);
-    userList->UpdateLayout();*/
+    userList->UpdateLayout();
 }
 
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserLeft(StringHash eventType, VariantMap& eventData)
-{/*
+{
     using namespace UserLeft;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
@@ -302,7 +306,7 @@ void MainMenu::HandleChatUserLeft(StringHash eventType, VariantMap& eventData)
             userList->UpdateLayout();
             break;
         }
-    }*/
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -346,9 +350,9 @@ void MainMenu::Handle_BTN_MAINSERVER_JOINGAME(StringHash eventType, VariantMap& 
 {
 }
 void MainMenu::Handle_BTN_MAINSERVER_DISCONNECT(StringHash eventType, VariantMap& eventData)
-{/*
-    GetSubsystem<ClientProtocol>()->DisconnectFromServer();
-    SwitchToScreen(SCREEN_MAINLOCAL);*/
+{
+    GetSubsystem<Network>()->Disconnect();
+    SwitchToScreen(SCREEN_MAINLOCAL);
 }
 
 // ----------------------------------------------------------------------------
@@ -369,21 +373,25 @@ void MainMenu::Handle_BTN_CONNECT_OK(StringHash eventType, VariantMap& eventData
     msg.AppendWithFormat("Connecting to %s on port %d...", address.CString(), port);
     Connecting_SetMessage(msg);
 
-    /*if (GetSubsystem<ClientProtocol>()->ConnectToServer(username, address, port) == true)
+    VariantMap connectionData;
+    connectionData["Username"] = username;
+    Scene* scene = new Scene(context_);
+    scene->CreateComponent<Octree>(LOCAL);
+    if (GetSubsystem<Network>()->Connect(address, port, scene, connectionData) == true)
         SwitchToScreen(SCREEN_CONNECTING);
     else
-        SwitchToScreen(SCREEN_CONNECTIONFAILED);*/
+        SwitchToScreen(SCREEN_CONNECTIONFAILED);
 }
 void MainMenu::Handle_BTN_CONNECT_CANCEL(StringHash eventType, VariantMap& eventData)
 {
-    //GetSubsystem<ClientProtocol>()->AbortConnectingToServer();
+    GetSubsystem<Network>()->Disconnect();
     SwitchToScreen(SCREEN_MAINLOCAL);
 }
 
 // ----------------------------------------------------------------------------
 void MainMenu::Handle_BTN_CONNECTING_CANCEL(StringHash eventType, VariantMap& eventData)
 {
-    //GetSubsystem<ClientProtocol>()->DisconnectFromServer();
+    GetSubsystem<Network>()->Disconnect();
     SwitchToScreen(SCREEN_MAINLOCAL);
 }
 

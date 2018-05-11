@@ -65,32 +65,21 @@ void ClientApplication::Start()
 
     UI* ui = GetSubsystem<UI>();
     ui->GetRoot()->SetDefaultStyle(cache->GetResource<XMLFile>("UI/DefaultStyle.xml"));
-/*
+
     MainMenu* menu = new MainMenu(context_);
     menu->SetStyleAuto();
     ui->GetRoot()->AddChild(menu);
-    menu->Initialise();*/
-    ChatClient* chat = ui->GetRoot()->CreateChild<ChatClient>();
-    chat->SetStyleAuto();
-    chat->Initialise();
-    chat->SetSize(400, 400);
-
-    scene_ = new Scene(context_);
-    scene_->CreateComponent<Octree>(LOCAL);
+    menu->Initialise();
 
     GetSubsystem<Input>()->SetMouseVisible(true);
     GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
-
-    VariantMap connectionData;
-    connectionData["Username"] = "TheComet";
-    GetSubsystem<Network>()->Connect("127.0.0.1", 2048, scene_, connectionData);
 }
 
 // ----------------------------------------------------------------------------
 void ClientApplication::Stop()
-{/*
-    GetSubsystem<ClientProtocol>()->DisconnectFromServer();
-    GetSubsystem<UI>()->GetRoot()->RemoveAllChildren();*/
+{
+    GetSubsystem<Network>()->Disconnect();
+    GetSubsystem<UI>()->GetRoot()->RemoveAllChildren();
 }
 
 // ----------------------------------------------------------------------------
