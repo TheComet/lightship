@@ -1,5 +1,6 @@
 #include "Lightship/UserManager/ServerUserManager.h"
 #include "Lightship/UserManager/User.h"
+#include "Lightship/UserManager/Events.h"
 #include "Lightship/Network/Protocol.h"
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/IO/MemoryBuffer.h>
@@ -88,6 +89,17 @@ void ServerUserManager::HandleClientIdentity(StringHash eventType, VariantMap& e
 
     // Associate connection with user for easier lookups later
     user->SetConnection(connection);
+
+    /*
+     * With the user verified, notify everyone server-side that the client
+     * has successfully connected. Note that we can re-use the event data
+     * since it's the same.
+     */
+    SendEvent(E_CLIENTCONNECTEDANDVERIFIED, eventData);
+
+    // The client should also be notified that their connection was accepted
+    GetSubsystem<Network>()->RegisterRemoteEvent(E_SERVERCONNECTEDANDVERIFIED);
+    connection->SendRemoteEvent(E_SERVERCONNECTEDANDVERIFIED, false);
 }
 
 // ----------------------------------------------------------------------------

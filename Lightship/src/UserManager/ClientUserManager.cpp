@@ -11,19 +11,7 @@ using namespace Urho3D;
 ClientUserManager::ClientUserManager(Context* context) :
     UserManager(context)
 {
-    SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(ClientUserManager, HandleServerConnected));
-    SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(ClientUserManager, HandleServerDisconnected));
     SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(ClientUserManager, HandleNetworkMessage));
-}
-
-// ----------------------------------------------------------------------------
-void ClientUserManager::HandleServerConnected(StringHash eventType, VariantMap& eventData)
-{
-}
-
-// ----------------------------------------------------------------------------
-void ClientUserManager::HandleServerDisconnected(StringHash eventType, VariantMap& eventData)
-{
 }
 
 // ----------------------------------------------------------------------------

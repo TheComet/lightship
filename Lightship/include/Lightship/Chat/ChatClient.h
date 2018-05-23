@@ -31,7 +31,7 @@ public:
 
 private:
     void HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
-    void HandleServerConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
+    void HandleServerConnectedAndVerified(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleServerDisconnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 

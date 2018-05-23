@@ -134,11 +134,8 @@ void MainMenu::Initialise()
 
 #undef CONNECT_BUTTON
 
-    SubscribeToEvent(E_USERLISTCHANGED, URHO3D_HANDLER(MainMenu, HandleChatUserListChanged));
-    SubscribeToEvent(E_USERLEFT, URHO3D_HANDLER(MainMenu, HandleChatUserJoined));
-    SubscribeToEvent(E_USERLEFT, URHO3D_HANDLER(MainMenu, HandleChatUserLeft));
     SubscribeToEvent(E_CONNECTFAILED, URHO3D_HANDLER(MainMenu, HandleConnectFailed));
-    SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerConnected));
+    SubscribeToEvent(E_SERVERCONNECTEDANDVERIFIED, URHO3D_HANDLER(MainMenu, HandleServerConnectedAndVerified));
     SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(MainMenu, HandleServerDisonnected));
 }
 
@@ -240,7 +237,7 @@ void MainMenu::ConnectionFailed_SetMessage(const String& msg)
 
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
-{
+{/*
     using namespace UserListChanged;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
@@ -261,12 +258,12 @@ void MainMenu::HandleChatUserListChanged(Urho3D::StringHash eventType, Urho3D::V
         userList->AddItem(text);
     }
     userList->EnableLayoutUpdate();
-    userList->UpdateLayout();
+    userList->UpdateLayout();*/
 }
 
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserJoined(StringHash eventType, VariantMap& eventData)
-{
+{/*
     using namespace UserJoined;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
@@ -280,12 +277,12 @@ void MainMenu::HandleChatUserJoined(StringHash eventType, VariantMap& eventData)
     text->SetStyleAuto();
     text->SetText(eventData[P_USERNAME].GetString());
     userList->AddItem(text);
-    userList->UpdateLayout();
+    userList->UpdateLayout();*/
 }
 
 // ----------------------------------------------------------------------------
 void MainMenu::HandleChatUserLeft(StringHash eventType, VariantMap& eventData)
-{
+{/*
     using namespace UserLeft;
 
     ListView* userList = GetUIChild<ListView>(screens_[SCREEN_MAINSERVER], "ConnectedPlayers");
@@ -306,7 +303,7 @@ void MainMenu::HandleChatUserLeft(StringHash eventType, VariantMap& eventData)
             userList->UpdateLayout();
             break;
         }
-    }
+    }*/
 }
 
 // ----------------------------------------------------------------------------
@@ -316,7 +313,7 @@ void MainMenu::HandleConnectFailed(StringHash eventType, VariantMap& eventData)
 }
 
 // ----------------------------------------------------------------------------
-void MainMenu::HandleServerConnected(StringHash eventType, VariantMap& eventData)
+void MainMenu::HandleServerConnectedAndVerified(StringHash eventType, VariantMap& eventData)
 {
     SwitchToScreen(SCREEN_MAINSERVER);
 }

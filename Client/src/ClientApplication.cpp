@@ -9,6 +9,7 @@
 #include "Lightship/Player.h"
 #include "Lightship/TrackingCamera.h"
 #include "Lightship/UserManager/ClientUserManager.h"
+#include "Lightship/UserManager/Events.h"
 #include <Urho3D/AngelScript/Script.h>
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Engine/DebugHud.h>
@@ -110,6 +111,8 @@ void ClientApplication::SubscribeToEvents()
 {
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(ClientApplication, HandleKeyDown));
     SubscribeToEvent(E_POSTRENDERUPDATE, URHO3D_HANDLER(ClientApplication, HandlePostRenderUpdate));
+
+    GetSubsystem<Network>()->RegisterRemoteEvent(E_SERVERCONNECTEDANDVERIFIED);
 }
 
 // ----------------------------------------------------------------------------

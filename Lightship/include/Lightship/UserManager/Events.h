@@ -2,24 +2,13 @@
 
 #include <Urho3D/Core/Object.h>
 
-// For when the entire user list changes
-URHO3D_EVENT(E_USERLISTCHANGED, UserListChanged)
+/// Sent when a client connects (from the server's perspective) and is verified to use the server (username, password, etc.)
+URHO3D_EVENT(E_CLIENTCONNECTEDANDVERIFIED, ClientConnectedAndVerified)
 {
-    URHO3D_PARAM(P_USERLIST, UserList);  // StringVector, names of all users
+    URHO3D_PARAM(P_CONNECTION, Connection);  // Connection pointer
 }
 
-URHO3D_EVENT(E_USERJOINED, UserJoined)
+/// Sent when a server accepts and verifies the client (username, password, etc.)
+URHO3D_EVENT(E_SERVERCONNECTEDANDVERIFIED, ServerConnectedAndVerified)
 {
-    URHO3D_PARAM(P_USERNAME, Username);  // String, name of user who joined
-}
-
-URHO3D_EVENT(E_USERLEFT, UserLeft)
-{
-    URHO3D_PARAM(P_USERNAME, Username);  // String, name of user who left
-}
-
-URHO3D_EVENT(E_USERNAMECHANGED, UserNameChanged)
-{
-    URHO3D_PARAM(P_OLDUSERNAME, OldUsername);  // String
-    URHO3D_PARAM(P_NEWUSERNAME, NewUsername);  // String
 }

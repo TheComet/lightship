@@ -8,7 +8,5 @@ public:
     ClientUserManager(Urho3D::Context* context);
 
 private:
-    void HandleServerConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
-    void HandleServerDisconnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
     void HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData);
 };

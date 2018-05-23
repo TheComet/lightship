@@ -1,4 +1,5 @@
 #include "Lightship/Chat/ChatClient.h"
+#include "Lightship/UserManager/Events.h"
 #include "Lightship/Network/Protocol.h"
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Input/InputEvents.h>
@@ -18,7 +19,7 @@ ChatClient::ChatClient(Context* context) :
     UIElement(context)
 {
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(ChatClient, HandleKeyDown));
-    SubscribeToEvent(E_SERVERCONNECTED, URHO3D_HANDLER(ChatClient, HandleServerConnected));
+    SubscribeToEvent(E_SERVERCONNECTEDANDVERIFIED, URHO3D_HANDLER(ChatClient, HandleServerConnectedAndVerified));
     SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(ChatClient, HandleServerDisconnected));
     SubscribeToEvent(E_NETWORKMESSAGE, URHO3D_HANDLER(ChatClient, HandleNetworkMessage));
 }
@@ -130,7 +131,7 @@ void ChatClient::HandleKeyDown(Urho3D::StringHash eventType, Urho3D::VariantMap&
 }
 
 // ----------------------------------------------------------------------------
-void ChatClient::HandleServerConnected(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
+void ChatClient::HandleServerConnectedAndVerified(Urho3D::StringHash eventType, Urho3D::VariantMap& eventData)
 {
     Connection* serverConnection = GetSubsystem<Network>()->GetServerConnection();
     serverConnection->SendMessage(MSG_CHAT_REQUEST_HISTORY, true, false, VectorBuffer());
