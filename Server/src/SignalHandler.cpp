@@ -1,5 +1,6 @@
-#include "LightshipServer/SignalHandler.h"
+#include "LightshipServer/SignalHandler.hpp"
 #include "LightshipServer/signals.h"
+
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Input/InputEvents.h>

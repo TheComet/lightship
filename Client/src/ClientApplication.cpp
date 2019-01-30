@@ -1,15 +1,15 @@
-#include "LightshipClient/ClientApplication.h"
-#include "LightshipClient/MainMenu.h"
-#include "Lightship/Chat/ChatClient.h"
-#include "Lightship/Network/ClientProtocol.h"
-#include "Lightship/DebugTextScroll.h"
-#include "Lightship/GameConfig.h"
-#include "Lightship/Map.h"
-#include "Lightship/MapState.h"
-#include "Lightship/Player.h"
-#include "Lightship/TrackingCamera.h"
-#include "Lightship/UserManager/ClientUserManager.h"
-#include "Lightship/UserManager/Events.h"
+#include "LightshipClient/ClientApplication.hpp"
+#include "Lightship/Menu/Menu.hpp"
+#include "Lightship/Chat/ChatClient.hpp"
+#include "Lightship/DebugTextScroll.hpp"
+#include "Lightship/GameConfig.hpp"
+#include "Lightship/Map.hpp"
+#include "Lightship/MapState.hpp"
+#include "Lightship/Player.hpp"
+#include "Lightship/TrackingCamera.hpp"
+#include "Lightship/UserManager/ClientUserManager.hpp"
+#include "Lightship/UserManager/Events.hpp"
+
 #include <Urho3D/AngelScript/Script.h>
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Engine/DebugHud.h>
@@ -30,13 +30,9 @@
 #include <Urho3D/Scene/Scene.h>
 #include <Urho3D/UI/UI.h>
 
-#include <Urho3D/UI/UIElement.h>
-#include <Urho3D/UI/ListView.h>
-#include <Urho3D/UI/LineEdit.h>
-#include <Urho3D/UI/Text.h>
-#include <Urho3D/UI/Window.h>
-
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 ClientApplication::ClientApplication(Context* context) :
@@ -67,10 +63,10 @@ void ClientApplication::Start()
     UI* ui = GetSubsystem<UI>();
     ui->GetRoot()->SetDefaultStyle(cache->GetResource<XMLFile>("UI/DefaultStyle.xml"));
 
-    MainMenu* menu = new MainMenu(context_);
+    LS::MainMenu* menu = new LS::MainMenu(context_);
     menu->SetStyleAuto();
+    menu->SetSize(ui->GetRoot()->GetSize());
     ui->GetRoot()->AddChild(menu);
-    menu->Initialise();
 
     GetSubsystem<Input>()->SetMouseVisible(true);
     GetSubsystem<Log>()->SetLevel(LOG_DEBUG);
@@ -93,7 +89,7 @@ void ClientApplication::RegisterStuff()
 #endif
 
     // Client only components
-    MainMenu::RegisterObject(context_);
+    LS::MainMenu::RegisterObject(context_);
 
     // Client/Server subsystems
     context_->RegisterSubsystem<ClientUserManager>();
@@ -101,6 +97,7 @@ void ClientApplication::RegisterStuff()
 
     // Client/Server components
     ChatClient::RegisterObject(context_);
+    ClientUserManager::RegisterObject(context_);
     Map::RegisterObject(context_);
     MapState::RegisterObject(context_);
     Player::RegisterObject(context_);
@@ -221,4 +218,6 @@ void ClientApplication::HandlePostRenderUpdate(StringHash eventType, VariantMap&
             break;
         }
     }*/
+}
+
 }

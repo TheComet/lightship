@@ -1,0 +1,29 @@
+#ifndef LIGHTSHIP_CONFIG_HPP
+#   define LIGHTSHIP_CONFIG_HPP
+
+    // ------------------------------------------------------------------------
+    // set LIGHTSHIP_LIB_TYPE to either SHARED or STATIC
+    // ------------------------------------------------------------------------
+
+#   define LIGHTSHIP_${LIGHTSHIP_LIB_TYPE}
+
+#   if !defined(LIGHTSHIP_SHARED) && !defined(LIGHTSHIP_STATIC)
+#       error Please define LIGHTSHIP_SHARED or LIGHTSHIP_STATIC.
+#   endif
+
+    // ------------------------------------------------------------------------
+    // Visibility macros
+    // ------------------------------------------------------------------------
+
+#   define LIGHTSHIP_HELPER_API_EXPORT ${LIGHTSHIP_HELPER_API_EXPORT}
+#   define LIGHTSHIP_HELPER_API_IMPORT ${LIGHTSHIP_HELPER_API_IMPORT}
+#   define LIGHTSHIP_HELPER_API_LOCAL  ${LIGHTSHIP_HELPER_API_LOCAL}
+#   if defined(LIGHTSHIP_BUILDING) /* defined by CMake when library is being compiled */
+#       define LIGHTSHIP_PUBLIC_API LIGHTSHIP_HELPER_API_EXPORT
+#   else
+#       define LIGHTSHIP_PUBLIC_API LIGHTSHIP_HELPER_API_IMPORT
+#   endif
+#   define LIGHTSHIP_PRIVATE_API LIGHTSHIP_HELPER_API_LOCAL
+
+
+#endif // LIGHTSHIP_CONFIG_HPP

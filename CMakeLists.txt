@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake/Modules")
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMake/Modules")
 
 # If the user specifies -DCMAKE_BUILD_TYPE on the command line, take their
 # definition and dump it in the cache along with proper documentation, otherwise
@@ -38,8 +38,8 @@ include_directories(${URHO3D_INCLUDE_DIRS})
 
 #set (DEST_RUNTIME_DIR ${CMAKE_BINARY_DIR}/bin)
 set (RESOURCE_DIRS
-    "${CMAKE_SOURCE_DIR}/bin/CoreData"
-    "${CMAKE_SOURCE_DIR}/bin/Data")
+    "${CMAKE_CURRENT_SOURCE_DIR}/lightship-assets/CoreData"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lightship-assets/Data")
 
 add_subdirectory ("Lightship")
 add_subdirectory ("Server")

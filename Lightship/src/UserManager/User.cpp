@@ -1,9 +1,12 @@
-#include "Lightship/UserManager/User.h"
+#include "Lightship/UserManager/User.hpp"
+
 #include <Urho3D/IO/Serializer.h>
 #include <Urho3D/IO/Deserializer.h>
 #include <Urho3D/IO/Log.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 User::User(Urho3D::Context* context, const String& username, int uid) :
@@ -62,4 +65,6 @@ bool User::Save(Serializer& dest) const
     }
 
     return Serializable::Save(dest);
+}
+
 }

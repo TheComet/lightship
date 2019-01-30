@@ -1,5 +1,6 @@
-#include "Lightship/MapState.h"
-#include "Lightship/Network/Protocol.h"
+#include "Lightship/MapState.hpp"
+#include "Lightship/Network/Protocol.hpp"
+
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Graphics/Model.h>
 #include <Urho3D/Graphics/Material.h>
@@ -17,6 +18,8 @@
 #include <cassert>
 
 using namespace Urho3D;
+
+namespace LS {
 
 static const char* tileDataTypeStr[] = {
     "Empty",
@@ -621,4 +624,6 @@ void MapState::HandleNetworkMessage(StringHash eventType, VariantMap& eventData)
             URHO3D_LOGERROR("Received an invalid map state network action!");
             break;
     }
+}
+
 }

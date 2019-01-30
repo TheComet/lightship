@@ -1,6 +1,8 @@
-#include "Lightship/Chat/Chat.h"
+#include "Lightship/Chat/Chat.hpp"
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 Chat::Chat() :
@@ -19,4 +21,6 @@ void Chat::SetMessageLimit(int limit)
 {
     limit_ = limit;
     ClearMessages();
+}
+
 }

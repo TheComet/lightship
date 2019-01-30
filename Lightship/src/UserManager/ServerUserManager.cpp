@@ -1,7 +1,8 @@
-#include "Lightship/UserManager/ServerUserManager.h"
-#include "Lightship/UserManager/User.h"
-#include "Lightship/UserManager/Events.h"
-#include "Lightship/Network/Protocol.h"
+#include "Lightship/UserManager/ServerUserManager.hpp"
+#include "Lightship/UserManager/User.hpp"
+#include "Lightship/UserManager/Events.hpp"
+#include "Lightship/Network/Protocol.hpp"
+
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/IO/MemoryBuffer.h>
 #include <Urho3D/Network/Connection.h>
@@ -9,6 +10,8 @@
 #include <Urho3D/Network/Network.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 ServerUserManager::ServerUserManager(Urho3D::Context* context) :
@@ -50,7 +53,7 @@ void ServerUserManager::SendUserList(Connection* recipient)
 {
     VectorBuffer buffer;
     buffer.WriteUShort(GetUserCount());
-    for (const auto& user : users_)
+    for (const auto& user : GetUsers())
     {
         user.second_->Save(buffer);
     }
@@ -129,4 +132,6 @@ void ServerUserManager::HandleNetworkMessage(StringHash eventType, VariantMap& e
     URHO3D_LOGDEBUGF("Client %s requested user list", GetUserByUID(connection->GetIdentity()["UID"].GetInt())->GetUsername().CString());
 
     SendUserList(connection);
+}
+
 }

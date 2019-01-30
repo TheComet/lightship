@@ -1,6 +1,7 @@
-#include "Lightship/Chat/ChatClient.h"
-#include "Lightship/UserManager/Events.h"
-#include "Lightship/Network/Protocol.h"
+#include "Lightship/Chat/ChatClient.hpp"
+#include "Lightship/UserManager/Events.hpp"
+#include "Lightship/Network/Protocol.hpp"
+
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Input/InputEvents.h>
 #include <Urho3D/IO/VectorBuffer.h>
@@ -14,10 +15,23 @@
 
 using namespace Urho3D;
 
+namespace LS {
+
 // ----------------------------------------------------------------------------
 ChatClient::ChatClient(Context* context) :
     UIElement(context)
 {
+    chatMessages_ = CreateChild<ListView>();
+    chatMessages_->SetStyleAuto();
+
+    inputBox_ = CreateChild<LineEdit>();
+    inputBox_->SetFixedHeight(20);
+    inputBox_->SetFocusMode(FM_FOCUSABLE);
+    inputBox_->SetStyleAuto();
+
+    SetLayoutMode(LM_VERTICAL);
+    SetLayoutSpacing(5);
+
     SubscribeToEvent(E_KEYDOWN, URHO3D_HANDLER(ChatClient, HandleKeyDown));
     SubscribeToEvent(E_SERVERCONNECTEDANDVERIFIED, URHO3D_HANDLER(ChatClient, HandleServerConnectedAndVerified));
     SubscribeToEvent(E_SERVERDISCONNECTED, URHO3D_HANDLER(ChatClient, HandleServerDisconnected));
@@ -33,18 +47,6 @@ void ChatClient::RegisterObject(Urho3D::Context* context)
 // ----------------------------------------------------------------------------
 void ChatClient::Initialise()
 {
-    chatMessages_ = new ListView(context_);
-    chatMessages_->SetStyleAuto();
-    AddChild(chatMessages_);
-
-    inputBox_ = new LineEdit(context_);
-    inputBox_->SetFixedHeight(20);
-    inputBox_->SetStyleAuto();
-    inputBox_->SetFocusMode(FM_FOCUSABLE);
-    AddChild(inputBox_);
-
-    SetLayoutMode(LM_VERTICAL);
-    SetLayoutSpacing(5);
     UpdateLayout();
 }
 
@@ -176,4 +178,6 @@ void ChatClient::HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::Vari
         default:
             break;
     }
+}
+
 }

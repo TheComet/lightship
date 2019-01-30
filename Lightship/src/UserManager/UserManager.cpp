@@ -1,14 +1,16 @@
-#include "Lightship/UserManager/UserManager.h"
-#include "Lightship/UserManager/User.h"
+#include "Lightship/UserManager/UserManager.hpp"
+#include "Lightship/UserManager/User.hpp"
 #include <Urho3D/IO/Log.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 static int g_uid = 0;
 
 // ----------------------------------------------------------------------------
 UserManager::UserManager(Context* context) :
-    Object(context)
+    UIElement(context)
 {
 }
 
@@ -38,6 +40,12 @@ bool UserManager::RemoveUserByConnection(Connection* connection)
         return false;
     }
     return RemoveUserByUID(user->GetUID());
+}
+
+// ----------------------------------------------------------------------------
+void UserManager::RemoveAllUsers()
+{
+    users_.Clear();
 }
 
 // ----------------------------------------------------------------------------
@@ -71,4 +79,12 @@ StringVector UserManager::GetUsernames() const
 int UserManager::GetUserCount() const
 {
     return users_.Size();
+}
+
+// ----------------------------------------------------------------------------
+const UserManager::Users& UserManager::GetUsers() const
+{
+    return users_;
+}
+
 }

@@ -1,12 +1,13 @@
-#include "Lightship/GameConfig.h"
-#include "Lightship/Map.h"
-#include "Lightship/MapState.h"
-#include "Lightship/Player.h"
-#include "Lightship/Chat/ChatServer.h"
-#include "Lightship/Network/Protocol.h"
-#include "Lightship/UserManager/ServerUserManager.h"
-#include "LightshipServer/ServerApplication.h"
-#include "LightshipServer/SignalHandler.h"
+#include "Lightship/GameConfig.hpp"
+#include "Lightship/Map.hpp"
+#include "Lightship/MapState.hpp"
+#include "Lightship/Player.hpp"
+#include "Lightship/Chat/ChatServer.hpp"
+#include "Lightship/Network/Protocol.hpp"
+#include "Lightship/UserManager/ServerUserManager.hpp"
+#include "LightshipServer/ServerApplication.hpp"
+#include "LightshipServer/SignalHandler.hpp"
+
 #include <Urho3D/AngelScript/Script.h>
 #include <Urho3D/Graphics/DebugRenderer.h>
 #include <Urho3D/Graphics/Octree.h>
@@ -21,9 +22,9 @@
 #include <Urho3D/Resource/XMLFile.h>
 #include <Urho3D/Scene/Scene.h>
 
-#include <iostream>
-
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 LightshipServerApplication::LightshipServerApplication(Context* context) :
@@ -133,4 +134,6 @@ void LightshipServerApplication::HandleFileChanged(StringHash eventType, Variant
 void LightshipServerApplication::HandleExitRequested(StringHash eventType, VariantMap& eventData)
 {
     engine_->Exit();
+}
+
 }

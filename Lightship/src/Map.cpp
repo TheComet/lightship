@@ -1,5 +1,6 @@
-#include "Lightship/Map.h"
-#include "Lightship/MapState.h"
+#include "Lightship/Map.hpp"
+#include "Lightship/MapState.hpp"
+
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Scene/Scene.h>
 #include <Urho3D/Scene/Node.h>
@@ -10,6 +11,8 @@
 #include <Urho3D/Resource/XMLFile.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 Map::Map(Context* context) :
@@ -130,4 +133,6 @@ Node* Map::CreateTrigger()
     material->SetFillMode(FILL_WIREFRAME);
 
     return node;
+}
+
 }

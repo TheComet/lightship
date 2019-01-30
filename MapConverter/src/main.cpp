@@ -1,5 +1,5 @@
-#include "MapConverter/MapConverter.h"
-#include "Lightship/config.h"
+#include "MapConverter/MapConverter.hpp"
+#include "Lightship/config.hpp"
 
 #include <stdio.h>
 
@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 #endif
 {
     SharedPtr<Context> context(new Context);
-    SharedPtr<MapConverter> app(new MapConverter(context));
+    SharedPtr<LS::MapConverter> app(new LS::MapConverter(context));
 
 #ifndef LIGHTSHIP_PLATFORM_WINDOWS
     for(int i = 1; i != argc; ++i)

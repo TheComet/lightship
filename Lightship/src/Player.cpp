@@ -1,5 +1,6 @@
-#include "Lightship/Player.h"
-#include "Lightship/GameConfig.h"
+#include "Lightship/Player.hpp"
+#include "Lightship/GameConfig.hpp"
+
 #include <Urho3D/Core/Context.h>
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Graphics/Material.h>
@@ -12,6 +13,8 @@
 #include <iostream>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 Player::Player(Context* context) :
@@ -75,4 +78,6 @@ void Player::HandleUpdate(Urho3D::StringHash eventType, Urho3D::VariantMap& even
         node_->GetRotation().YawAngle() + config->player.rotate.speed * timeStep,
         0
     ));
+}
+
 }

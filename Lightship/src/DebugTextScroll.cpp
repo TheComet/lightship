@@ -1,4 +1,4 @@
-#include "Lightship/DebugTextScroll.h"
+#include "Lightship/DebugTextScroll.hpp"
 
 #include <Urho3D/Core/CoreEvents.h>
 #include <Urho3D/Resource/ResourceCache.h>
@@ -9,6 +9,8 @@
 #include <Urho3D/UI/Font.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 DebugTextScroll::DebugTextScroll(Urho3D::Context* context) :
@@ -100,4 +102,6 @@ void DebugTextScroll::HandleLogMessage(StringHash eventType, VariantMap& eventDa
     if(level == LOG_ERROR)
         color = Color(1, 0.1, 0.1);
     Print(eventData[P_MESSAGE].GetString(), color);
+}
+
 }

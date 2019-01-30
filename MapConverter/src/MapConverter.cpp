@@ -1,11 +1,13 @@
-#include "MapConverter/MapConverter.h"
-#include "Lightship/MapState.h"
+#include "MapConverter/MapConverter.hpp"
+#include "Lightship/MapState.hpp"
 
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/IO/File.h>
 #include <Urho3D/Resource/XMLFile.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 MapConverter::MapConverter(Context* context) :
@@ -90,4 +92,6 @@ String MapConverter::ReplaceExtension(const String& fileName, const String& newE
     if ((pos = fileName.FindLast('.')) != String::NPOS)
         return fileName.Substring(0, pos) + "." + newExtension;
     return fileName + "." + newExtension;
+}
+
 }

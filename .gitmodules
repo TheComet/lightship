@@ -1,0 +1,3 @@
+[submodule "lightship-assets"]
+	path = lightship-assets
+	url = https://TheComet@github.com/thecomet/lightship-assets.git

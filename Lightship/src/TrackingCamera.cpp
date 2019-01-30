@@ -1,7 +1,9 @@
-#include "Lightship/TrackingCamera.h"
+#include "Lightship/TrackingCamera.hpp"
 #include <Urho3D/Scene/Node.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 TrackingCamera::TrackingCamera(Context* context) :
@@ -35,4 +37,6 @@ void TrackingCamera::Update(float timeStep)
         (cameraNode = cameraNode_.Lock()) == NULL
     )
         return;
+}
+
 }

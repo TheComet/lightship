@@ -1,4 +1,6 @@
-#include "Lightship/Math.h"
+#include "Lightship/Math.hpp"
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 float Math::Wrap180(float angle)
@@ -8,4 +10,6 @@ float Math::Wrap180(float angle)
     while(angle > 180.0f)
         angle -= 360.0f;
     return angle;
+}
+
 }

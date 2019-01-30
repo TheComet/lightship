@@ -1,9 +1,7 @@
-#include "Lightship/config.h"
-#include "LightshipServer/ServerApplication.h"
+#include "Lightship/config.hpp"
+#include "LightshipServer/ServerApplication.hpp"
 
 #include <stdio.h>
-
-using namespace Urho3D;
 
 void printHelp(const char* prog_name)
 {
@@ -29,7 +27,7 @@ int main(int argc, char** argv)
     }
 #endif
 
-    SharedPtr<Context> context(new Context);
-    SharedPtr<Application> app(new LightshipServerApplication(context));
+    Urho3D::SharedPtr<Urho3D::Context> context(new Urho3D::Context);
+    Urho3D::SharedPtr<Urho3D::Application> app(new LS::LightshipServerApplication(context));
     return app->Run();
 }

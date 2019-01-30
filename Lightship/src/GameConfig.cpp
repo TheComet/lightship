@@ -1,5 +1,5 @@
-#include "Lightship/GameConfig.h"
-#include "Lightship/GameConfigEvents.h"
+#include "Lightship/GameConfig.hpp"
+#include "Lightship/GameConfigEvents.hpp"
 
 #include <Urho3D/IO/Log.h>
 #include <Urho3D/Resource/ResourceCache.h>
@@ -8,6 +8,7 @@
 
 using namespace Urho3D;
 
+namespace LS {
 
 // ----------------------------------------------------------------------------
 GameConfig::GameConfig(Context* context) :
@@ -73,4 +74,6 @@ void GameConfig::HandleFileChanged(StringHash eventType, VariantMap& eventData)
     {
         Reload();
     }
+}
+
 }

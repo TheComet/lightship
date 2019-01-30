@@ -1,7 +1,8 @@
-#include "Lightship/Chat/ChatServer.h"
-#include "Lightship/Network/Protocol.h"
-#include "Lightship/UserManager/UserManager.h"
-#include "Lightship/UserManager/User.h"
+#include "Lightship/Chat/ChatServer.hpp"
+#include "Lightship/Network/Protocol.hpp"
+#include "Lightship/UserManager/UserManager.hpp"
+#include "Lightship/UserManager/User.hpp"
+
 #include <Urho3D/Network/Network.h>
 #include <Urho3D/Network/NetworkEvents.h>
 #include <Urho3D/IO/VectorBuffer.h>
@@ -9,6 +10,8 @@
 #include <Urho3D/IO/Log.h>
 
 using namespace Urho3D;
+
+namespace LS {
 
 // ----------------------------------------------------------------------------
 ChatServer::ChatServer(Context* context) :
@@ -122,4 +125,6 @@ void ChatServer::HandleNetworkMessage(Urho3D::StringHash eventType, Urho3D::Vari
 
         connection->SendMessage(MSG_CHAT_REQUEST_HISTORY, true, false, sendBuf);
     }
+}
+
 }
