@@ -28,6 +28,7 @@ public:
     virtual void Stop() override;
 
 private:
+    bool ProcessCommandLine();
     void RegisterStuff();
     void SubscribeToEvents();
     void CreateDebugHud();

@@ -19,13 +19,53 @@ MapConverter::MapConverter(Context* context) :
 // ----------------------------------------------------------------------------
 void MapConverter::Setup()
 {
-    engineParameters_["Headless"]    = true;
+    engineParameters_["Headless"] = true;
+}
+
+// ----------------------------------------------------------------------------
+bool MapConverter::ProcessCommandLine()
+{
+    for (Vector<String>::ConstIterator it = GetArguments().Begin(); it != GetArguments().End(); ++it)
+    {
+        // Is it a switch?
+        if (it->StartsWith("-"))
+        {
+            // Request for help?
+            if (it->Compare("-h") == 0 || it->Compare("--help") == 0)
+            {
+                const char* cmd = "./lightship-mapconverter";
+                fprintf(stderr, "Usage: %s [options]\n", cmd);
+                fprintf(stderr, "Converts OMG maps to XML format. Example:\n");
+                fprintf(stderr, "  %s path/to/map.omg output/location/\n", cmd);
+                fprintf(stderr, "Also supports bulk conversions. Example:\n");
+                fprintf(stderr, "  %s map1.omg map2.omg map3.omg output/location/\n", cmd);
+                fprintf(stderr, "  -h, --help                           = Show this help\n");
+                return false;
+            }
+            else
+            {
+                fprintf(stderr, "Unknown option %s\n", it->CString());
+                return false;
+            }
+
+            continue;
+        }
+
+        // Assume it's a map file
+        if (it->EndsWith(".omg", false))
+            AddFile(*it);
+        else
+            SetOutputLocation(*it);
+    }
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------
 void MapConverter::Start()
 {
-    Convert();
+    if (ProcessCommandLine())
+        Convert();
     engine_->Exit();
 }
 
@@ -95,3 +135,5 @@ String MapConverter::ReplaceExtension(const String& fileName, const String& newE
 }
 
 }
+
+URHO3D_DEFINE_APPLICATION_MAIN(LS::MapConverter)

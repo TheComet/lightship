@@ -15,16 +15,17 @@ namespace LS {
 
 class MapState;
 
-class LightshipServerApplication : public Urho3D::Application
+class ServerApplication : public Urho3D::Application
 {
 public:
-	LightshipServerApplication(Urho3D::Context* context);
+    ServerApplication(Urho3D::Context* context);
 
     virtual void Setup() override;
     virtual void Start() override;
     virtual void Stop() override;
 
 private:
+    bool ProcessCommandLine();
     void RegisterStuff();
     void LoadMap(const Urho3D::String& fileName);
     void CreatePlayer();

@@ -17,6 +17,7 @@ public:
     void AddFile(const Urho3D::String& fileToConvert);
 
 private:
+    bool ProcessCommandLine();
     void ConvertSingle(const Urho3D::String& inFile) const;
     void Convert() const;
     Urho3D::String Join(const Urho3D::String& path1, const Urho3D::String& path2) const;

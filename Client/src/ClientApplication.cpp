@@ -9,6 +9,7 @@
 #include "Lightship/TrackingCamera.hpp"
 #include "Lightship/UserManager/ClientUserManager.hpp"
 #include "Lightship/UserManager/Events.hpp"
+#include "Lightship/UserManager/User.hpp"
 
 #include <Urho3D/AngelScript/Script.h>
 #include <Urho3D/Core/CoreEvents.h>
@@ -53,6 +54,12 @@ void ClientApplication::Setup()
 // ----------------------------------------------------------------------------
 void ClientApplication::Start()
 {
+    if (ProcessCommandLine() == false)
+    {
+        engine_->Exit();
+        return;
+    }
+
     RegisterStuff();
     CreateDebugHud();
     SubscribeToEvents();
@@ -77,6 +84,37 @@ void ClientApplication::Stop()
 {
     GetSubsystem<Network>()->Disconnect();
     GetSubsystem<UI>()->GetRoot()->RemoveAllChildren();
+}
+
+// ----------------------------------------------------------------------------
+bool ClientApplication::ProcessCommandLine()
+{
+    for (Vector<String>::ConstIterator it = GetArguments().Begin(); it != GetArguments().End(); ++it)
+    {
+        // Is it a switch?
+        if (it->StartsWith("-"))
+        {
+            if (it->Compare("-h") == 0 || it->Compare("--help") == 0)
+            {
+                const char* cmd = "./lightship-client";
+                fprintf(stderr, "Usage: %s [options]", cmd);
+                fprintf(stderr, "  -h, --help                           = Show this help");
+                return false;
+            }
+            else
+            {
+                fprintf(stderr, "Unknown option %s\n", it->CString());
+                return false;
+            }
+
+            continue;
+        }
+
+        fprintf(stderr, "Unknown argument %s\n", it->CString());
+        return false;
+    }
+
+    return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -221,3 +259,5 @@ void ClientApplication::HandlePostRenderUpdate(StringHash eventType, VariantMap&
 }
 
 }
+
+URHO3D_DEFINE_APPLICATION_MAIN(LS::ClientApplication)

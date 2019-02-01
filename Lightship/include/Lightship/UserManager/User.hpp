@@ -1,10 +1,11 @@
 #pragma once
 
+#include "Lightship/config.hpp"
 #include <Urho3D/Scene/Serializable.h>
 
 namespace LS {
 
-class User : public Urho3D::Serializable
+class LIGHTSHIP_PUBLIC_API User : public Urho3D::Serializable
 {
     URHO3D_OBJECT(User, Urho3D::Serializable)
 public:

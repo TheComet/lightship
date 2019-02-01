@@ -1,6 +1,7 @@
 #include "Lightship/Menu/Menu.hpp"
 #include "Lightship/Chat/ChatClient.hpp"
 #include "Lightship/Chat/Events.hpp"
+#include "Lightship/UserManager/User.hpp"
 #include "Lightship/UserManager/Events.hpp"
 #include "Lightship/UserManager/ClientUserManager.hpp"
 

@@ -5,6 +5,7 @@
 #include "Lightship/Chat/ChatServer.hpp"
 #include "Lightship/Network/Protocol.hpp"
 #include "Lightship/UserManager/ServerUserManager.hpp"
+#include "Lightship/UserManager/User.hpp"
 #include "LightshipServer/ServerApplication.hpp"
 #include "LightshipServer/SignalHandler.hpp"
 
@@ -27,20 +28,26 @@ using namespace Urho3D;
 namespace LS {
 
 // ----------------------------------------------------------------------------
-LightshipServerApplication::LightshipServerApplication(Context* context) :
+ServerApplication::ServerApplication(Context* context) :
     Application(context)
 {
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::Setup()
+void ServerApplication::Setup()
 {
     engineParameters_["Headless"] = true;
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::Start()
+void ServerApplication::Start()
 {
+    if (ProcessCommandLine() == false)
+    {
+        engine_->Exit();
+        return;
+    }
+
     // configure resource cache to auto-reload resources when they change
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     cache->SetAutoReloadResources(true);
@@ -55,13 +62,44 @@ void LightshipServerApplication::Start()
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::Stop()
+void ServerApplication::Stop()
 {
     GetSubsystem<Network>()->StopServer();
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::RegisterStuff()
+bool ServerApplication::ProcessCommandLine()
+{
+    for (Vector<String>::ConstIterator it = GetArguments().Begin(); it != GetArguments().End(); ++it)
+    {
+        // Is it a switch?
+        if (it->StartsWith("-"))
+        {
+            if (it->Compare("-h") == 0 || it->Compare("--help") == 0)
+            {
+                const char* cmd = "./lightship-server";
+                fprintf(stderr, "Usage: %s [options]", cmd);
+                fprintf(stderr, "  -h, --help                           = Show this help");
+                return false;
+            }
+            else
+            {
+                fprintf(stderr, "Unknown option %s\n", it->CString());
+                return false;
+            }
+
+            continue;
+        }
+
+        fprintf(stderr, "Unknown argument %s\n", it->CString());
+        return false;
+    }
+
+    return true;
+}
+
+// ----------------------------------------------------------------------------
+void ServerApplication::RegisterStuff()
 {
     // Server only subsystems
     context_->RegisterSubsystem<SignalHandler>();
@@ -79,14 +117,14 @@ void LightshipServerApplication::RegisterStuff()
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::SubscribeToEvents()
+void ServerApplication::SubscribeToEvents()
 {
-    SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(LightshipServerApplication, HandleFileChanged));
-    SubscribeToEvent(E_EXITREQUESTED, URHO3D_HANDLER(LightshipServerApplication, HandleExitRequested));
+    SubscribeToEvent(E_FILECHANGED, URHO3D_HANDLER(ServerApplication, HandleFileChanged));
+    SubscribeToEvent(E_EXITREQUESTED, URHO3D_HANDLER(ServerApplication, HandleExitRequested));
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::LoadMap(const String& fileName)
+void ServerApplication::LoadMap(const String& fileName)
 {/*
     ResourceCache* cache = GetSubsystem<ResourceCache>();
     XMLFile* file = cache->GetResource<XMLFile>(fileName);
@@ -110,7 +148,7 @@ void LightshipServerApplication::LoadMap(const String& fileName)
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::CreatePlayer()
+void ServerApplication::CreatePlayer()
 {/*
     Node* playerNode = scene_->CreateChild("Player");
     playerNode->CreateComponent<Player>();
@@ -118,7 +156,7 @@ void LightshipServerApplication::CreatePlayer()
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::HandleFileChanged(StringHash eventType, VariantMap& eventData)
+void ServerApplication::HandleFileChanged(StringHash eventType, VariantMap& eventData)
 {
     if(xmlScene_ && xmlScene_->GetName() == eventData[FileChanged::P_RESOURCENAME].GetString())
     {
@@ -131,9 +169,11 @@ void LightshipServerApplication::HandleFileChanged(StringHash eventType, Variant
 }
 
 // ----------------------------------------------------------------------------
-void LightshipServerApplication::HandleExitRequested(StringHash eventType, VariantMap& eventData)
+void ServerApplication::HandleExitRequested(StringHash eventType, VariantMap& eventData)
 {
     engine_->Exit();
 }
 
 }
+
+URHO3D_DEFINE_APPLICATION_MAIN(LS::ServerApplication)
